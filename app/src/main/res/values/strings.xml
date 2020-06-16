@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Followers Manager for Twitter</string>
+    <string name="three_ellipses">...</string>
+    <string name="following_F_capitalized">Following</string>
+    <string name="followers_f_capitalized">Followers</string>
+    <string name="app_functions_text">Take better control of your twitter audience, see who unfollows you, who you do not follow, and more.</string>
+    <string name="login_with_twitter">Login with Twitter</string>
+    <string name="welcome">Welcome</string>
+    <string name="CONSUMER_KEY">Uh17KtEpyab0nVuBi1ZEmCXmO</string>
+    <string name="CONSUMER_SECRET">ONtsQ8qCEbULwPjTLbLn2u6LJaDijFx5QW6szOStwwf67m6upF</string>
+</resources>

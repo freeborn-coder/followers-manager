@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "453721386039",
+    "firebase_url": "https://followers-manager-for-twitter.firebaseio.com",
+    "project_id": "followers-manager-for-twitter",
+    "storage_bucket": "followers-manager-for-twitter.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:453721386039:android:4f02850dbed911855a23b2",
+        "android_client_info": {
+          "package_name": "com.gananidevs.followersmanagerfortwitter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "453721386039-23fqotpgijv1b1gdnkp2m64covefodn7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD7OKPb2T30G50vaV5lWzkWUhF2TPdIhJM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "453721386039-23fqotpgijv1b1gdnkp2m64covefodn7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
