@@ -36,13 +36,14 @@
                 app:layout_constraintTop_toBottomOf="@+id/name_tv">
 
                 <com.google.android.material.button.MaterialButton
+                    android:id="@+id/new_followers_btn"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:backgroundTint="@android:color/white"
                     android:paddingLeft="20dp"
                     android:paddingTop="10dp"
                     android:paddingBottom="10dp"
-                    android:text="New Followers (..)"
+                    android:text="@string/new_followers_btn_default_text"
                     android:textAlignment="textStart"
                     android:textAppearance="@style/TextAppearance.AppCompat.Body1"
                     android:textSize="16sp"
@@ -53,13 +54,14 @@
                     app:iconTint="#E82E57" />
 
                 <com.google.android.material.button.MaterialButton
+                    android:id="@+id/new_unfollowers_btn"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:backgroundTint="@android:color/white"
                     android:paddingLeft="20dp"
                     android:paddingTop="10dp"
                     android:paddingBottom="10dp"
-                    android:text="New unfollowers (..)"
+                    android:text="@string/new_unfollowers_btn_default_text"
                     android:textAlignment="textStart"
                     android:textAppearance="@style/TextAppearance.AppCompat.Body1"
                     android:textSize="16sp"
@@ -70,13 +72,14 @@
                     app:iconTint="#E82E57" />
 
                 <com.google.android.material.button.MaterialButton
+                    android:id="@+id/non_followers_btn"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:backgroundTint="@android:color/white"
                     android:paddingLeft="20dp"
                     android:paddingTop="10dp"
                     android:paddingBottom="10dp"
-                    android:text="Non-Followers (..)"
+                    android:text="@string/non_followers_btn_default_text"
                     android:textAlignment="textStart"
                     android:textAppearance="@style/TextAppearance.AppCompat.Body1"
                     android:textSize="16sp"
@@ -87,13 +90,14 @@
                     app:iconTint="#E82E57" />
 
                 <com.google.android.material.button.MaterialButton
+                    android:id="@+id/fans_btn"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:backgroundTint="@android:color/white"
                     android:paddingLeft="20dp"
                     android:paddingTop="10dp"
                     android:paddingBottom="10dp"
-                    android:text="Fans (..)"
+                    android:text="@string/fans_btn_default_text"
                     android:textAlignment="textStart"
                     android:textAppearance="@style/TextAppearance.AppCompat.Body1"
                     android:textSize="16sp"
@@ -104,13 +108,14 @@
                     app:iconTint="#E82E57" />
 
                 <com.google.android.material.button.MaterialButton
+                    android:id="@+id/mutual_followers_btn"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:backgroundTint="@android:color/white"
                     android:paddingLeft="20dp"
                     android:paddingTop="10dp"
                     android:paddingBottom="10dp"
-                    android:text="Mutual Followers (..)"
+                    android:text="@string/mutual_followers_btn_default_text"
                     android:textAlignment="textStart"
                     android:textAppearance="@style/TextAppearance.AppCompat.Body1"
                     android:textSize="16sp"
@@ -121,13 +126,14 @@
                     app:iconTint="#E82E57" />
 
                 <com.google.android.material.button.MaterialButton
+                    android:id="@+id/whitelisted_users_btn"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:backgroundTint="@android:color/white"
                     android:paddingLeft="20dp"
                     android:paddingTop="10dp"
                     android:paddingBottom="10dp"
-                    android:text="Whitelisted Users (..)"
+                    android:text="@string/whitelisted_users_btn_default_text"
                     android:textAlignment="textStart"
                     android:textAppearance="@style/TextAppearance.AppCompat.Body1"
                     android:textSize="16sp"
@@ -138,13 +144,14 @@
                     app:iconTint="#E82E57" />
 
                 <com.google.android.material.button.MaterialButton
+                    android:id="@+id/search_users_btn"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:backgroundTint="@android:color/white"
                     android:paddingLeft="20dp"
                     android:paddingTop="10dp"
                     android:paddingBottom="10dp"
-                    android:text="Search Users"
+                    android:text="@string/search_users_btn_text"
                     android:textAlignment="textStart"
                     android:textAppearance="@style/TextAppearance.AppCompat.Body1"
                     android:textSize="16sp"
@@ -158,10 +165,12 @@
 
 
             <de.hdodenhof.circleimageview.CircleImageView
-                android:id="@+id/circleImageView"
+                android:id="@+id/main_activity_profile_iv"
                 android:layout_width="85dp"
                 android:layout_height="85dp"
                 android:layout_marginTop="10dp"
+                android:elevation="2dp"
+                android:scaleType="centerCrop"
                 android:src="@android:color/white"
                 app:layout_constraintBottom_toTopOf="@id/screen_name_tv"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -174,15 +183,15 @@
                 android:id="@+id/following_count_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
+                android:layout_marginTop="15dp"
                 android:text="@string/three_ellipses"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                 android:textColor="@android:color/white"
                 android:textSize="22sp"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/circleImageView"
-                app:layout_constraintTop_toTopOf="@+id/circleImageView" />
+                app:layout_constraintStart_toEndOf="@+id/main_activity_profile_iv"
+                app:layout_constraintTop_toTopOf="@+id/main_activity_profile_iv" />
 
             <TextView
                 android:id="@+id/following_tv"
@@ -191,25 +200,25 @@
                 android:layout_marginBottom="15dp"
                 android:text="@string/following_F_capitalized"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                android:textColor="#308AB1"
+                android:textColor="@color/main_activity_low_emphasis_text_color"
                 android:textSize="17sp"
-                app:layout_constraintBottom_toBottomOf="@+id/circleImageView"
+                app:layout_constraintBottom_toBottomOf="@+id/main_activity_profile_iv"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/circleImageView" />
+                app:layout_constraintStart_toEndOf="@+id/main_activity_profile_iv" />
 
             <TextView
                 android:id="@+id/followers_count_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
+                android:layout_marginTop="15dp"
                 android:text="@string/three_ellipses"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                 android:textColor="@android:color/white"
                 android:textSize="22sp"
                 android:textStyle="bold"
-                app:layout_constraintEnd_toStartOf="@+id/circleImageView"
+                app:layout_constraintEnd_toStartOf="@+id/main_activity_profile_iv"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/circleImageView" />
+                app:layout_constraintTop_toTopOf="@+id/main_activity_profile_iv" />
 
             <TextView
                 android:id="@+id/followers_tv"
@@ -218,10 +227,10 @@
                 android:layout_marginBottom="15dp"
                 android:text="@string/followers_f_capitalized"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                android:textColor="#308AB1"
+                android:textColor="@color/main_activity_low_emphasis_text_color"
                 android:textSize="17sp"
-                app:layout_constraintBottom_toBottomOf="@+id/circleImageView"
-                app:layout_constraintEnd_toStartOf="@+id/circleImageView"
+                app:layout_constraintBottom_toBottomOf="@+id/main_activity_profile_iv"
+                app:layout_constraintEnd_toStartOf="@+id/main_activity_profile_iv"
                 app:layout_constraintStart_toStartOf="parent" />
 
             <TextView
@@ -231,11 +240,11 @@
                 android:layout_marginTop="8dp"
                 android:text="@string/three_ellipses"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                android:textColor="#308AB1"
-                android:textSize="17sp"
-                app:layout_constraintEnd_toEndOf="@+id/circleImageView"
-                app:layout_constraintStart_toStartOf="@+id/circleImageView"
-                app:layout_constraintTop_toBottomOf="@+id/circleImageView" />
+                android:textColor="@color/main_activity_low_emphasis_text_color"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="@+id/main_activity_profile_iv"
+                app:layout_constraintStart_toStartOf="@+id/main_activity_profile_iv"
+                app:layout_constraintTop_toBottomOf="@+id/main_activity_profile_iv" />
 
             <TextView
                 android:id="@+id/name_tv"
@@ -244,10 +253,10 @@
                 android:text="@string/three_ellipses"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                 android:textColor="@android:color/white"
-                android:textSize="20sp"
+                android:textSize="18sp"
                 android:textStyle="bold"
-                app:layout_constraintEnd_toEndOf="@+id/circleImageView"
-                app:layout_constraintStart_toStartOf="@+id/circleImageView"
+                app:layout_constraintEnd_toEndOf="@+id/main_activity_profile_iv"
+                app:layout_constraintStart_toStartOf="@+id/main_activity_profile_iv"
                 app:layout_constraintTop_toBottomOf="@+id/screen_name_tv" />
 
             <View
@@ -262,7 +271,20 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/name_tv" />
 
+            <ProgressBar
+                android:id="@+id/users_list_progress_bar"
+                style="?android:attr/progressBarStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="invisible"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.7" />
         </androidx.constraintlayout.widget.ConstraintLayout>
+
     </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

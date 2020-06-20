@@ -2,6 +2,8 @@ package com.gananidevs.followersmanagerfortwitter;
 
 import org.junit.Test;
 
+import java.util.Random;
+
 import static org.junit.Assert.*;
 
 /**
@@ -13,5 +15,15 @@ public class ExampleUnitTest {
     @Test
     public void addition_isCorrect() {
         assertEquals(4, 2 + 2);
+    }
+
+    @Test
+    public void isCommaInsertionCorrect(){
+        // Test if the insert comma function works properly
+
+        int number = 132;
+        String myNumberWithComma = "132";
+        assertEquals(myNumberWithComma,Helper.insertCommas(number));
+
     }
 }

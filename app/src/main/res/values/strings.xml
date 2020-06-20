@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Followers Manager for Twitter</string>
+    <string name="app_name">Followers Manager</string>
     <string name="three_ellipses">...</string>
     <string name="following_F_capitalized">Following</string>
     <string name="followers_f_capitalized">Followers</string>
@@ -8,4 +8,20 @@
     <string name="welcome">Welcome</string>
     <string name="CONSUMER_KEY">Uh17KtEpyab0nVuBi1ZEmCXmO</string>
     <string name="CONSUMER_SECRET">ONtsQ8qCEbULwPjTLbLn2u6LJaDijFx5QW6szOStwwf67m6upF</string>
+    <string name="new_followers_btn_default_text">New Followers (..)</string>
+    <string name="new_unfollowers_btn_default_text">New Unfollowers (..)</string>
+    <string name="non_followers_btn_default_text">Non-Followers (..)</string>
+    <string name="fans_btn_default_text">Fans (..)</string>
+    <string name="mutual_followers_btn_default_text">Mutual Followers (..)</string>
+    <string name="whitelisted_users_btn_default_text">Whitelisted Users (..)</string>
+    <string name="search_users_btn_text">Search Users</string>
+    <string name="refresh">refresh</string>
+    <string name="follow_all_lowercase">follow</string>
+    <string name="unfollow_all_lowercase">unfollow</string>
+    <string name="screen_name">\@screen name</string>
+    <string name="name">name</string>
+    <string name="follows_you">follows you</string>
+    <string name="doesnt_follow_you">doesn\'t follow you</string>
+    <string name="no_valid_list">No valid list to show</string>
+    <string name="still_loading">Still loading...</string>
 </resources>

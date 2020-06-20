@@ -6,6 +6,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -18,6 +20,7 @@ import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.Twitter;
 import com.twitter.sdk.android.core.TwitterAuthConfig;
 import com.twitter.sdk.android.core.TwitterConfig;
+import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
 import com.twitter.sdk.android.core.identity.TwitterAuthClient;
@@ -42,6 +45,7 @@ public class WelcomeScreenActivity extends AppCompatActivity {
                 .debug(true)
                 .build();
         Twitter.initialize(config);
+
         twitterAuthClient = new TwitterAuthClient();
 
         // Set the layout file
@@ -112,6 +116,4 @@ public class WelcomeScreenActivity extends AppCompatActivity {
     protected void onDestroy(){
         super.onDestroy();
     }
-
-
 }
