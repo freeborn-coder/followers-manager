@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -24,7 +25,7 @@ public class UsersListActivity extends AppCompatActivity {
 
     ArrayList<UserItem> userItemsList; // itemslist is for the fully hydrated user itsms
     private LinearLayoutManager linearLayoutManager;
-    public static Boolean isLoading = false;
+    public static boolean isLoading = false, hasReachedEnd = false;
     ProgressBar progressBar;
     private UsersRecyclerAdapter recyclerAdapter;
     private RecyclerView recyclerView;
@@ -48,15 +49,15 @@ public class UsersListActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setAdapter(recyclerAdapter);
 
-        MyRvScrollListener scrollListener = new MyRvScrollListener();
-        recyclerView.addOnScrollListener(scrollListener);
-
+        //MyRvScrollListener scrollListener = new MyRvScrollListener();
 
         if(userIdsList.size() > 20){
             loadRecyclerViewData(0,20,progressBar,recyclerAdapter,userIdsList);
         }else{
             loadRecyclerViewData(0,userIdsList.size()-1,progressBar,recyclerAdapter,userIdsList);
         }
+
+        recyclerView.addOnScrollListener(new MyRvScrollListener());
 
     }
 
@@ -89,6 +90,7 @@ public class UsersListActivity extends AppCompatActivity {
 
         private int previous_total = 0, page_number = 0;
 
+
         @Override
         public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
             super.onScrolled(recyclerView, dx, dy);
@@ -97,36 +99,56 @@ public class UsersListActivity extends AppCompatActivity {
             int totalItemCount = linearLayoutManager.getItemCount();
             int firstVisibleItemPosition = linearLayoutManager.findFirstVisibleItemPosition();
 
+            Log.i("Visible item count",""+visibleItemCount);
+            Log.i("Total item count",""+totalItemCount);
+            Log.i("1st Visible item pos",""+firstVisibleItemPosition);
+            Log.i("is loading",String.valueOf(isLoading));
+
+            if(!hasReachedEnd && !isLoading && !recyclerView.canScrollVertically(1)){
+                isLoading = true;
+                ++page_number;
+                int startIndex = page_number * ITEM_COUNT;
+                int endIndex = startIndex + ITEM_COUNT;
+
+                Toast.makeText(UsersListActivity.this,"Loading new data...",Toast.LENGTH_SHORT).show();
+                loadRecyclerViewData(startIndex,endIndex,progressBar,recyclerAdapter,userIdsList);
+            }
+
+            /*
             if (dy > 0) {
                 if (isLoading) {
                     if (totalItemCount > previous_total) {
                         isLoading = false;
                         previous_total = totalItemCount;
+                        Log.i("Previous total",""+previous_total);
                     }
 
                 }
 
                 if (!isLoading && (totalItemCount - visibleItemCount) <= (firstVisibleItemPosition + VIEW_THRESHOLD)) {
-
+                    isLoading = true;
                     ++page_number;
                     int startIndex = page_number * ITEM_COUNT;
                     int endIndex = startIndex + ITEM_COUNT;
 
+                    Toast.makeText(UsersListActivity.this,"Loading new data...",Toast.LENGTH_SHORT).show();
                     loadRecyclerViewData(startIndex,endIndex,progressBar,recyclerAdapter,userIdsList);
                 }
 
             }
+
+             */
         }
 
     }
 
 
     public void loadRecyclerViewData(int startIndex, int endIndex, final ProgressBar pb, final UsersRecyclerAdapter recyclerAdapter, ArrayList<Long> userIdsList) {
+
         String userIdsStr = getIdsStr(startIndex,endIndex,userIdsList);
 
         if(!userIdsStr.isEmpty()) {
             pb.setVisibility(View.VISIBLE);
-            isLoading = true;
 
             MyTwitterApiClient twitterApiClient = new MyTwitterApiClient();
             twitterApiClient.getUsersLookupCustomService().get(userIdsStr).enqueue(new Callback<ResponseBody>() {
@@ -145,12 +167,16 @@ public class UsersListActivity extends AppCompatActivity {
 
                 @Override
                 public void failure(TwitterException exception) {
+                    Toast.makeText(UsersListActivity.this,exception.getMessage(),Toast.LENGTH_SHORT).show();
                     exception.printStackTrace();
                     isLoading = false;
                 }
 
             });
 
+        }else{
+            hasReachedEnd = true;
+            isLoading = false;
         }
 
 

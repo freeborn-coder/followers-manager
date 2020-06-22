@@ -214,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
                         //getWhitelistedUsersIds(userIdStr);
                         isDataRefreshed = true;
                         getAndLoadCounts();
-                        Toast.makeText(MainActivity.this,"Data refreshed from followers ids req",Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(MainActivity.this,"Data refreshed from followers ids req",Toast.LENGTH_SHORT).show();
 
                     }
 
@@ -249,7 +249,7 @@ public class MainActivity extends AppCompatActivity {
                     if (followersIdsList.size() > 0 && friendsIdsList.size() > 0 && !isDataRefreshed) {
                         //getWhitelistedUsersIds(userIdStr);
                         isDataRefreshed = true;
-                        Toast.makeText(MainActivity.this,"Data refreshed from friends ids req",Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(MainActivity.this,"Data refreshed from friends ids req",Toast.LENGTH_SHORT).show();
                         getAndLoadCounts();
                     }
                 }else if(listAndCursorObject.next_cursor > 0){

@@ -15,8 +15,10 @@ public class Helper {
     private Helper(){}
 
     public static final int IDS_COUNT_TO_RETRIEVE = 5000;
+
+    // Recycler view pagination constants
     public static final int ITEM_COUNT = 20;
-    public static final int VIEW_THRESHOLD = 10; // made this 15 temp. change to 10 if anything is wrong
+    public static final int VIEW_THRESHOLD = 2; // made this 15 temp. change to 10 if anything is wrong
 
     //Names for list to help activity identify which list to use
     public static final String NON_FOLLOWERS_LIST = "non_followers_list";

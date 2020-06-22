@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingBottom="20dp"
+    android:paddingBottom="0dp"
     android:background="@android:color/transparent">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -26,16 +26,17 @@
             android:layout_marginStart="@dimen/user_item_text_margin_start"
             android:layout_marginBottom="2dp"
             android:text="@string/screen_name"
-            android:textSize="15sp"
+            android:textSize="16sp"
             android:textStyle="bold"
             android:ellipsize="end"
             android:singleLine="true"
+            android:maxLength="20"
             android:textAppearance="@style/TextAppearance.AppCompat.Large"
-            android:textColor="@color/user_item_name_light_gray"
+            android:textColor="@android:color/white"
             app:layout_constraintStart_toEndOf="@id/profile_image"
             app:layout_constraintEnd_toStartOf="@id/dropDownArrow"
             app:layout_constraintHorizontal_bias="0"
-            app:layout_constraintBottom_toTopOf="@id/follow_unfollow_button" />
+            app:layout_constraintTop_toTopOf="@id/profile_image" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/screen_name_tv"
@@ -45,7 +46,7 @@
             android:layout_marginBottom="5dp"
             android:layout_marginTop="5dp"
             android:text="@string/name"
-            android:textSize="14sp"
+            android:textSize="15sp"
             android:textAppearance="@style/TextAppearance.AppCompat.Small"
             android:textColor="@color/ccc_light_gray"
             app:layout_constraintTop_toTopOf="parent"
@@ -68,7 +69,7 @@
             android:textSize="10sp"
             android:textStyle="normal"
             app:cornerRadius="5dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="8dp"
             android:backgroundTint="@color/main_activity_low_emphasis_text_color"
             app:layout_constraintTop_toBottomOf="@id/screen_name_tv"
             app:layout_constraintStart_toEndOf="@+id/profile_image" />
@@ -109,7 +110,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="@id/follow_status_button"
             app:layout_constraintTop_toBottomOf="@id/follow_status_button"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="8dp"
             android:background="@color/main_activity_low_emphasis_text_color" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
