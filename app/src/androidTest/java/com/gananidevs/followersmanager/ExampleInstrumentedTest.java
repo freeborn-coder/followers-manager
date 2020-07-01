@@ -1,4 +1,4 @@
-package com.gananidevs.followersmanagerfortwitter;
+package com.gananidevs.followersmanager;
 
 import android.content.Context;
 

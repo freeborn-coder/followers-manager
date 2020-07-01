@@ -6,5 +6,17 @@
     <color name="divider_line_color">#55bbbbbb</color>
     <color name="main_activity_low_emphasis_text_color">#308AB1</color>
     <color name="user_item_name_light_gray">#E8E8E8</color>
-    <color name="ccc_light_gray">#CCCCCC</color>
+    <color name="very_light_gray_eee">#EEEEEE</color>
+    <color name="very_dark_222">#222222</color>
+    <color name="dark_4444">#444444</color>
+    <color name="ccc_grey">#CCCCCC</color>
+    <color name="green">#159142</color>
+    <color name="light_red">#BBB81D1D</color>
+    <color name="transparent_white">#99FFFFFF</color>
+    <color name="faded_white">#DDFFFFFF</color>
+    <color name="color_dark_grey_333">#333333</color>
+    <color name="light_gray_text">#B5B5B5</color>
+    <color name="light_gray_for_icons">#BBBBBB</color>
+    <color name="mid_gray_777">#777777</color>
+    <color name="follow_btn_back_color">#136182</color>
 </resources>

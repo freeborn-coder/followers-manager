@@ -1,16 +1,20 @@
-package com.gananidevs.followersmanagerfortwitter;
+package com.gananidevs.followersmanager;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.StrictMode;
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.webkit.CookieManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -18,6 +22,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
@@ -26,14 +31,21 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.TwitterAuthProvider;
 
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
 import com.twitter.sdk.android.core.models.User;
-import static com.gananidevs.followersmanagerfortwitter.Helper.*;
+import static com.gananidevs.followersmanager.Helper.*;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -49,29 +61,36 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean isDataRefreshed = false;
     private TwitterSession activeSession;
-    private MyButtonClickHandler buttonClickHandler;
+    private MyButtonClickListener myButtonClickListener;
     Boolean isLoading = true;
+    private UserItem user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        MobileAds.initialize(this);
 
         setContentView(R.layout.activity_main);
 
         // Get active twitter session
         activeSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
 
-        if(activeSession != null)
+        if(activeSession != null) {
+
             setUpUI(activeSession);
-        else{
+
+            // Sign in to firebase with twitter session if there is no active firebase session
+            FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+            if(firebaseUser == null) {
+                signIntoFirebaseUsingTwitter(activeSession);
+            }else{
+                getWhitelistedIds();
+            }
+
+        }else{
             startActivity(new Intent(this, WelcomeScreenActivity.class));
             finish();
-        }
-
-        // Sign in to firebase with twitter session if there is no active firebase session
-        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        if(firebaseUser == null) {
-            signIntoFirebaseUsingTwitter(activeSession);
         }
 
     }
@@ -95,16 +114,22 @@ public class MainActivity extends AppCompatActivity {
         searchUsersBtn = findViewById(R.id.search_users_btn);
 
         // set up handler for the buttons
-        buttonClickHandler = new MyButtonClickHandler();
+        myButtonClickListener = new MyButtonClickListener();
 
         // set click listener for all the buttons
-        newFollowersBtn.setOnClickListener(buttonClickHandler);
-        newUnfollowersBtn.setOnClickListener(buttonClickHandler);
-        nonFollowersBtn.setOnClickListener(buttonClickHandler);
-        fansBtn.setOnClickListener(buttonClickHandler);
-        mutualFollowersBtn.setOnClickListener(buttonClickHandler);
-        whitelistedUsersBtn.setOnClickListener(buttonClickHandler);
-        searchUsersBtn.setOnClickListener(buttonClickHandler);
+        newFollowersBtn.setOnClickListener(myButtonClickListener);
+        newUnfollowersBtn.setOnClickListener(myButtonClickListener);
+        nonFollowersBtn.setOnClickListener(myButtonClickListener);
+        fansBtn.setOnClickListener(myButtonClickListener);
+        mutualFollowersBtn.setOnClickListener(myButtonClickListener);
+        whitelistedUsersBtn.setOnClickListener(myButtonClickListener);
+        searchUsersBtn.setOnClickListener(myButtonClickListener);
+
+        // set click listener for the textviews: followers count, following count, followers text, following text
+        followersCountTv.setOnClickListener(myButtonClickListener);
+        followingCountTv.setOnClickListener(myButtonClickListener);
+        findViewById(R.id.followers_tv).setOnClickListener(myButtonClickListener);
+        findViewById(R.id.following_tv).setOnClickListener(myButtonClickListener);
 
         // Initialize all ids lists
         followersIdsList = new ArrayList<>();
@@ -119,6 +144,32 @@ public class MainActivity extends AppCompatActivity {
         // load twitter data for this user
         loadTwitterData(currentUserId);
 
+        profileImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                viewProfile();
+            }
+        });
+
+        nameTv.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                viewProfile();
+            }
+        });
+
+        screenNameTv.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                viewProfile();
+            }
+        });
+    }
+
+    private void viewProfile() {
+        Intent intent = new Intent(this,UserProfileActivity.class);
+        intent.putExtra(USER_PARCELABLE,user);
+        startActivity(intent);
     }
 
     private void clearLists(){
@@ -137,12 +188,12 @@ public class MainActivity extends AppCompatActivity {
         clearLists();
 
         // Get user data from api using user id
-        final MyTwitterApiClient twitterApiClient = new MyTwitterApiClient();
+        final MyTwitterApiClient twitterApiClient = new MyTwitterApiClient(activeSession);
         twitterApiClient.getUsersShowService().get(userId).enqueue(new Callback<User>() {
             @Override
             public void success(Result<User> result) {
                 //User user = result.data;
-                UserItem user = new UserItem(result.data);
+                user = new UserItem(result.data);
                 loadDataIntoUI(user);
 
                 getFollowersIds(userId, twitterApiClient,-1l);
@@ -176,22 +227,82 @@ public class MainActivity extends AppCompatActivity {
     /*
      * Sign in to firebase using the currently active twitter session token or object
      */
-    private void signIntoFirebaseUsingTwitter(TwitterSession session){
+    private void signIntoFirebaseUsingTwitter(final TwitterSession session) {
         AuthCredential credential = TwitterAuthProvider.getCredential(session.getAuthToken().token, session.getAuthToken().secret);
 
         FirebaseAuth.getInstance().signInWithCredential(credential).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
 
-                if(!task.isSuccessful()){
+                if (!task.isSuccessful()) {
                     task.getException().printStackTrace();
-                    Log.i("Firebase:","Sign in not successful");
-                }
-            }
 
+                    if (BuildConfig.DEBUG) {
+                        Log.i("Firebase:", "Sign in not successful");
+                        Toast.makeText(MainActivity.this, "firebase sign in failed " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                    signIntoFirebaseUsingTwitter(session);
+
+                }else if(task.isSuccessful()) {
+                    getWhitelistedIds();
+                }
+
+            }
         });
 
     }
+
+    private void getWhitelistedIds() {
+        setWhitelistButtonText();
+        FirebaseDatabase fbDb = FirebaseDatabase.getInstance(DATABASE_URL);
+        // get whitelisted users count and ids
+        DatabaseReference dbRef = fbDb.getReference().child("whitelist/" + activeSession.getUserId());
+
+        dbRef.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                Long id = Long.valueOf(dataSnapshot.getKey());
+                if (!whitelistedIdsList.contains(id)) {
+                    whitelistedIdsList.add(id);
+                    nonFollowersIdsList.remove(id);
+                }
+                setWhitelistButtonText();
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+                whitelistedIdsList.remove(Long.valueOf(dataSnapshot.getKey()));
+                setWhitelistButtonText();
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void setWhitelistButtonText() {
+        String whitelistedUsersText = "Whitelisted Users (" + insertCommas(whitelistedIdsList.size()) + ")";
+        whitelistedUsersBtn.setText(whitelistedUsersText);
+        if(!isLoading){
+            nonFollowersIdsList.removeAll(whitelistedIdsList);
+            nonFollowersIdsList.trimToSize();
+            String nonFollowersBtnTxt = "Non-Followers ("+nonFollowersIdsList.size()+")";
+            nonFollowersBtn.setText(nonFollowersBtnTxt);
+        }
+    }
+
 
     public void getFollowersIds(final Long userId, final MyTwitterApiClient myTwitterApiClient,Long cursor){
         Call<ResponseBody> call = myTwitterApiClient.getFollowersIdsCustomService().get(userId,cursor,Helper.IDS_COUNT_TO_RETRIEVE);
@@ -204,17 +315,17 @@ public class MainActivity extends AppCompatActivity {
 
                 if(listAndCursorObject.next_cursor == 0) {
 
-                    // after getting all followers ids, clone the list
-                    followersIdsClone = (ArrayList<Long>) followersIdsList.clone();
+                    // after getting all followers ids, clone the list| Not cloning for now
+                    //followersIdsClone = (ArrayList<Long>) followersIdsList.clone();
 
-                    //getNewUnfollows(); // get those users who have unfollowed the currentUser
+                    //getNewUnfollows(); // get those users who have unfollowed the currentUser|will do this later
 
                     // means we have gotten to the last page
                     if (followersIdsList.size() > 0 && friendsIdsList.size() > 0 && !isDataRefreshed) {
+
                         //getWhitelistedUsersIds(userIdStr);
                         isDataRefreshed = true;
                         getAndLoadCounts();
-                        //Toast.makeText(MainActivity.this,"Data refreshed from followers ids req",Toast.LENGTH_SHORT).show();
 
                     }
 
@@ -241,7 +352,7 @@ public class MainActivity extends AppCompatActivity {
         call.enqueue(new Callback<ResponseBody>() {
             @Override
             public void success(Result<ResponseBody> result) {
-                ListAndCursorObject listAndCursorObject = Helper.getIDsList(result);
+                ListAndCursorObject listAndCursorObject = getIDsList(result);
                 friendsIdsList.addAll(listAndCursorObject.list);
 
                 if(listAndCursorObject.next_cursor == 0){ // we're at the last page of response
@@ -249,11 +360,10 @@ public class MainActivity extends AppCompatActivity {
                     if (followersIdsList.size() > 0 && friendsIdsList.size() > 0 && !isDataRefreshed) {
                         //getWhitelistedUsersIds(userIdStr);
                         isDataRefreshed = true;
-                        //Toast.makeText(MainActivity.this,"Data refreshed from friends ids req",Toast.LENGTH_SHORT).show();
                         getAndLoadCounts();
                     }
                 }else if(listAndCursorObject.next_cursor > 0){
-                    //Log.i("Next page","Getting next page of next_cursor result for friends ids. next next_cursor: "+listAndCursorObject.next_cursor);
+
                     getFriendsIds(userId,myTwitterApiClient,listAndCursorObject.next_cursor);
                 }
 
@@ -271,54 +381,49 @@ public class MainActivity extends AppCompatActivity {
         try {
 
             int mutualFriendsCount = 0;
-            int followersCount = followersIdsList.size();
-            int friendsCount = friendsIdsList.size();
-            int whitelistCount = whitelistedIdsList.size();
 
-            for (int i = 0; i < friendsCount; i++) {
-
-                Long friendId = friendsIdsList.get(i);
-                if (followersIdsList.contains(friendId)) {
+            // Loop through people you follow and find non-followers
+            for(Long friendId: friendsIdsList){
+                if(followersIdsList.contains(friendId)){
                     mutualFriendsIdsList.add(friendId);
-
                 }else{
-                    // that means the user with this ID does not follow me (he/she) is a non-follower
-                    // add them to non-followers list
+                    // that means the user with this ID does not follow me (he/she) is a non-follower, add them to non-followers list
                     if(!whitelistedIdsList.contains(friendId)){
                         nonFollowersIdsList.add(friendId);
                     }
-
                 }
+            }
 
+            // find fans: any follower that is not a mutual follower is a fan
+            for(Long followerId:followersIdsList){
+                if(!mutualFriendsIdsList.contains(followerId)){
+                    fansIdsList.add(followerId);
+                }
             }
 
             mutualFriendsCount = mutualFriendsIdsList.size();
-            // get all fans
-            followersIdsList.removeAll(mutualFriendsIdsList);
-            followersIdsList.trimToSize();
 
-            fansIdsList = followersIdsList;
+            nonFollowersIdsList.removeAll(whitelistedIdsList);
+            nonFollowersIdsList.trimToSize();
 
             int nonFollowersCount = nonFollowersIdsList.size(); /*friendsCount - mutualFriendsCount - numWhitelist;*/
-            nonFollowersCount = (nonFollowersCount >= 0)? nonFollowersCount:0; // check if non-followers count is more than zero, if yes, change nothing, else set it as zero
 
             int fansCount = fansIdsList.size(); /*followersCount - mutualFriendsCount;*/
-            fansCount = (fansCount >= 0)? fansCount:0;
 
-            String nonFollowersBtnText = "Non-Followers (" + Helper.insertCommas(nonFollowersCount) +")";
-            String mutualFollowersBtnText = "Mutual Followers (" + Helper.insertCommas(mutualFriendsCount) + ")";
-            String fansBtnText = "Fans (" + Helper.insertCommas(fansCount) + ")";
-            String whitelistedusersBtnText = "Whitelisted Users (" + Helper.insertCommas(whitelistCount) + ")";
+            String nonFollowersBtnText = "Non-Followers (" + insertCommas(nonFollowersCount) +")";
+            String mutualFollowersBtnText = "Mutual Followers (" + insertCommas(mutualFriendsCount) + ")";
+            String fansBtnText = "Fans (" + insertCommas(fansCount) + ")";
+            String whitelistedUsersText = "Whitelisted Users (" + insertCommas(whitelistedIdsList.size()) + ")";
             String newFollowersBtnText = "New Followers (0)";
             String newUnfollowersBtnText = "New Unfollowers (0)";
 
-            // Set all the button texts
+            // Set all the followUnfollowButton texts
             newFollowersBtn.setText(newFollowersBtnText);
             newUnfollowersBtn.setText(newUnfollowersBtnText);
             nonFollowersBtn.setText(nonFollowersBtnText);
             fansBtn.setText(fansBtnText);
             mutualFollowersBtn.setText(mutualFollowersBtnText);
-            whitelistedUsersBtn.setText(whitelistedusersBtnText);
+            whitelistedUsersBtn.setText(whitelistedUsersText);
 
             progressBar.setVisibility(View.GONE);
             isLoading = false;
@@ -330,7 +435,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    class MyButtonClickHandler implements View.OnClickListener {
+    class MyButtonClickListener implements View.OnClickListener {
 
         @Override
         public void onClick(View v) {
@@ -338,27 +443,27 @@ public class MainActivity extends AppCompatActivity {
             switch(v.getId()){
                 case R.id.non_followers_btn:
                     intent = new Intent(MainActivity.this,UsersListActivity.class);
-                    intent.putExtra(LIST_NAME, NON_FOLLOWERS_LIST);
+                    intent.putExtra(LIST_NAME, NON_FOLLOWERS);
                     startActivity(intent);
                     break;
                 case R.id.mutual_followers_btn:
                     intent = new Intent(MainActivity.this,UsersListActivity.class);
-                    intent.putExtra(LIST_NAME, MUTUAL_FOLLOWERS_LIST);
+                    intent.putExtra(LIST_NAME, MUTUAL_FOLLOWERS);
                     startActivity(intent);
                     break;
                 case R.id.fans_btn:
                     intent = new Intent(MainActivity.this,UsersListActivity.class);
-                    intent.putExtra(LIST_NAME, FANS_LIST);
+                    intent.putExtra(LIST_NAME, FANS);
                     startActivity(intent);
                     break;
                 case R.id.new_followers_btn:
                     intent = new Intent(MainActivity.this,UsersListActivity.class);
-                    intent.putExtra(LIST_NAME, NEW_FOLLOWERS_LIST);
+                    intent.putExtra(LIST_NAME, NEW_FOLLOWERS);
                     startActivity(intent);
                     break;
                 case R.id.whitelisted_users_btn:
                     intent = new Intent(MainActivity.this,UsersListActivity.class);
-                    intent.putExtra(LIST_NAME, WHITELISTED_USERS_LIST);
+                    intent.putExtra(LIST_NAME, WHITELISTED_USERS);
                     startActivity(intent);
                     break;
                 case R.id.search_users_btn:
@@ -366,20 +471,33 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case R.id.new_unfollowers_btn:
                     intent = new Intent(MainActivity.this,UsersListActivity.class);
-                    intent.putExtra(LIST_NAME, NEW_UNFOLLOWERS_LIST);
+                    intent.putExtra(LIST_NAME, NEW_UNFOLLOWERS);
                     startActivity(intent);
                     break;
+                case R.id.followers_tv:
+                case R.id.followers_count_tv:
+                    viewUsers(FOLLOWERS); break;
+                case R.id.following_count_tv:
+                case R.id.following_tv:
+                    viewUsers(FOLLOWING); break;
                 default:
-
             }
         }
 
     }
 
+    private void viewUsers(String followersOrFollowing) {
+        Intent intent = new Intent(this, UsersListActivity.class);
+        intent.putExtra(LIST_NAME,followersOrFollowing);
+        startActivity(intent);
+    }
+
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.action_refresh){
             if(!isLoading) {
+                getWhitelistedIds();
                 loadTwitterData(activeSession.getUserId());
             }else{
                 Toast.makeText(this,this.getString(R.string.still_loading),Toast.LENGTH_SHORT).show();
@@ -398,15 +516,17 @@ public class MainActivity extends AppCompatActivity {
     public void onBackPressed() {
         new AlertDialog.Builder(this)
                 .setMessage("Sign out before exit?")
-                .setPositiveButton("yes", new DialogInterface.OnClickListener() {
+                .setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
 
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        CookieManager.getInstance().removeAllCookies(null);
+                        CookieManager.getInstance().flush();
                         FirebaseAuth.getInstance().signOut();
                         TwitterCore.getInstance().getSessionManager().clearActiveSession();
                         finish();
                     }
-                }).setNegativeButton("no", new DialogInterface.OnClickListener() {
+                }).setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 finish();

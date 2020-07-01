@@ -1,6 +1,7 @@
-package com.gananidevs.followersmanagerfortwitter;
+package com.gananidevs.followersmanager;
 
 import com.twitter.sdk.android.core.TwitterApiClient;
+import com.twitter.sdk.android.core.TwitterSession;
 import com.twitter.sdk.android.core.models.User;
 
 import okhttp3.ResponseBody;
@@ -11,6 +12,10 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public class MyTwitterApiClient extends TwitterApiClient {
+
+    public MyTwitterApiClient(TwitterSession session){
+        super(session);
+    }
 
     public UsersShowCustomService getUsersShowService(){
         return getService(UsersShowCustomService.class);
@@ -75,12 +80,12 @@ interface FriendsIdsCustomService{
 
 interface UsersLookupCustomService{
     @GET("/1.1/users/lookup.json")
-    Call<ResponseBody> get(@Query("user_id") String user_ids);
+    Call<ResponseBody> get(@Query("user_id") String user_ids,@Query("include_entities") boolean include_entities);
 }
 
 interface FriendshipsCreateCustomService{
     @POST("1.1/friendships/create.json")
-    Call<ResponseBody> get(@Query("user_id") long user_id);
+    Call<ResponseBody> post(@Query("user_id") long user_id);
 }
 
 interface FriendshipsDestroyCustomService{

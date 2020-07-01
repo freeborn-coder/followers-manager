@@ -1,7 +1,14 @@
-package com.gananidevs.followersmanagerfortwitter;
+package com.gananidevs.followersmanager;
 
+import android.content.Context;
+import android.graphics.drawable.Drawable;
+import android.util.TypedValue;
+import android.widget.Button;
+
+import androidx.core.content.ContextCompat;
+
+import com.google.android.material.button.MaterialButton;
 import com.twitter.sdk.android.core.Result;
-import com.twitter.sdk.android.core.models.User;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -16,18 +23,26 @@ public class Helper {
 
     public static final int IDS_COUNT_TO_RETRIEVE = 5000;
 
+    public static final int SLEEP_BOUND = 1500;
+
+    public static final String USER_PARCELABLE = "user_parcelable";
+
+    public static final String DATABASE_URL = "https://followers-manager-for-twitter.firebaseio.com/";
+
     // Recycler view pagination constants
-    public static final int ITEM_COUNT = 20;
-    public static final int VIEW_THRESHOLD = 2; // made this 15 temp. change to 10 if anything is wrong
+    public static final int ITEM_COUNT = 50;
+    public static final int VIEW_THRESHOLD = 5; // made this 15 temp. change to 10 if anything is wrong
 
     //Names for list to help activity identify which list to use
-    public static final String NON_FOLLOWERS_LIST = "non_followers_list";
+    public static final String NON_FOLLOWERS = "Non Followers";
     public static final String LIST_NAME = "list_name";
-    public static final String MUTUAL_FOLLOWERS_LIST = "mutual_followers_list";
-    public static final String FANS_LIST = "fans_list";
-    public static final String NEW_FOLLOWERS_LIST = "new_followers_list";
-    public static final String WHITELISTED_USERS_LIST = "whitelisted_users_list";
-    public static final String NEW_UNFOLLOWERS_LIST = "new_unfollowers_list";
+    public static final String MUTUAL_FOLLOWERS = "Mutual Followers";
+    public static final String FANS = "Fans";
+    public static final String NEW_FOLLOWERS = "New Followers";
+    public static final String WHITELISTED_USERS = "Whitelisted Users";
+    public static final String NEW_UNFOLLOWERS = "New Unfollowers";
+    public static final String FOLLOWERS = "Followers";
+    public static final String FOLLOWING = "Following";
 
     // this method returns a number that has been formatted to include commas, as a string
     public static String insertCommas(int number){
@@ -102,24 +117,25 @@ public class Helper {
     public static String getIdsStr(int startIndex, int endIndex, ArrayList<Long> list){
         String idsStr = "";
         try {
-
-            int idsCount = list.size();
-            if(idsCount == 1){
+            int count = list.size();
+            if(count == 1){
                 idsStr += list.get(0);
 
             }else {
-                for (int i = startIndex; i < endIndex; i++) {
-                    if (i < idsCount) {
+                for (int i = startIndex; i <= endIndex; i++) {
+                    if(i == endIndex){
+                        idsStr += list.get(i);
+                    }else{
                         idsStr += list.get(i) + ",";
                     }
                 }
-                if (idsStr.length() > 0) {
-                    idsStr = idsStr.substring(0, idsStr.length() - 1);
-                }
+
             }
+            //if(endIndex == count - 1) idsStr += "," + list.get(endIndex); // if it's last item of list, add the final id
         }catch(Exception e){
             e.printStackTrace();
         }
+
         return idsStr;
 
     }
@@ -150,6 +166,38 @@ public class Helper {
 
         return true;
 
+    }
+
+    public static void changeButtonTextAndColor(Context context, MaterialButton btn, int newText, int color){
+        btn.setText(context.getString(newText));
+        Drawable background = btn.getBackground();
+        background.setTint(context.getColor(color));
+        btn.setBackgroundDrawable(background);
+
+        //TypedValue.COMPLEX_UNIT_SP
+    }
+
+    public static void setFollowBtnAppearance(Context context, Long userId, MaterialButton followUnfollowBtn){
+        if(Helper.isFriend(userId)){
+            changeButtonTextAndColor(context,followUnfollowBtn,R.string.unfollow_all_lowercase,R.color.colorAccent);
+        }else{
+            changeButtonTextAndColor(context,followUnfollowBtn,R.string.follow_all_lowercase,R.color.colorPrimary);
+        }
+    }
+
+    /*
+     * Check if user with the given Id follows the currently signed in user
+     */
+    public static boolean isFollower(Long user_id){
+        return MainActivity.followersIdsList.contains(user_id);
+
+    }
+
+    /*
+     * Check if the currently signed in user follows the user with the given id
+     */
+    public static boolean isFriend(Long user_id){
+        return MainActivity.friendsIdsList.contains(user_id);
     }
 
 }

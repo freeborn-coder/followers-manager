@@ -1,4 +1,4 @@
-package com.gananidevs.followersmanagerfortwitter;
+package com.gananidevs.followersmanager;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -19,7 +19,7 @@ public class UserItem implements Parcelable {
     String location;
     String name;
     String screenName;
-    boolean verified;
+    boolean isVerified;
     String url;
 
     public UserItem(User user){
@@ -33,7 +33,7 @@ public class UserItem implements Parcelable {
         location = user.location;
         name = user.name;
         screenName = user.screenName;
-        verified = user.verified;
+        isVerified = user.verified;
         url = user.url;
     }
 
@@ -50,8 +50,10 @@ public class UserItem implements Parcelable {
             location = object.getString("location");
             name = object.getString("name");
             screenName = object.getString("screen_name");
-            verified = object.getBoolean("verified");
+            isVerified = object.getBoolean("verified");
             url = object.getString("url");
+            url = (url == null || url.isEmpty() || url.equals("null"))? "":url;
+            description = (description == null || description.isEmpty())? "":description;
         }catch (Exception e){e.printStackTrace();}
     }
 
@@ -66,7 +68,7 @@ public class UserItem implements Parcelable {
         location = in.readString();
         name = in.readString();
         screenName = in.readString();
-        verified = in.readByte() != 0;
+        isVerified = in.readByte() != 0;
         url = in.readString();
     }
 
@@ -99,7 +101,7 @@ public class UserItem implements Parcelable {
         dest.writeString(location);
         dest.writeString(name);
         dest.writeString(screenName);
-        dest.writeByte((byte) (verified ? 1 : 0));
+        dest.writeByte((byte) (isVerified ? 1 : 0));
         dest.writeString(url);
     }
 }

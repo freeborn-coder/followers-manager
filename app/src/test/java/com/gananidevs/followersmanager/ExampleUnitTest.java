@@ -1,8 +1,6 @@
-package com.gananidevs.followersmanagerfortwitter;
+package com.gananidevs.followersmanager;
 
 import org.junit.Test;
-
-import java.util.Random;
 
 import static org.junit.Assert.*;
 

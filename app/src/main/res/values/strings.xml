@@ -24,4 +24,21 @@
     <string name="doesnt_follow_you">doesn\'t follow you</string>
     <string name="no_valid_list">No valid list to show</string>
     <string name="still_loading">Still loading...</string>
+    <string name="yes">yes</string>
+    <string name="no">no</string>
+    <string name="description_text">user description text. let\'s see how long it can go. user description text.</string>
+    <string name="location">location</string>
+    <string name="date_joined">date joined</string>
+    <string name="url">url</string>
+    <string name="followers_manager_package_name">play.google.com/id?com.gananidevs.followersmanager</string>
+    <string name="view_on_twitter">view on twitter</string>
+    <string name="question_mark">\?</string>
+    <string name="cancel">cancel</string>
+    <string name="people_who_don_t_follow_you_back">People who don\'t follow you back</string>
+    <string name="remove">remove</string>
+    <string name="kindly_follow_back">Kindly follow back</string>
+    <string name="please_follow_back">Please follow back</string>
+    <string name="send">send</string>
+    <string name="Request_follow_back">Request follow back</string>
+    <string name="Add_to_whitelist">Add to whitelist</string>
 </resources>
