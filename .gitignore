@@ -12,3 +12,5 @@
 /captures
 .externalNativeBuild
 .cxx
+/app/src/main/res/xml/remote_cofig_defaults.xml
+/app/src/main/res/values/strings.xml
