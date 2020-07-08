@@ -21,6 +21,7 @@ public class UserItem implements Parcelable {
     String screenName;
     boolean isVerified;
     String url;
+    boolean followbackRequested = false;
 
     public UserItem(User user){
         profileImageUrlHttps = user.profileImageUrlHttps.replace("_normal","");

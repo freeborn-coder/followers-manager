@@ -29,22 +29,26 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
-import com.twitter.sdk.android.core.TwitterApiClient;
 import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Random;
 
 import okhttp3.ResponseBody;
 
+import static com.gananidevs.followersmanager.Helper.CURRENT_USER_INDEX;
 import static com.gananidevs.followersmanager.Helper.DATABASE_URL;
-import static com.gananidevs.followersmanager.Helper.SLEEP_BOUND;
+import static com.gananidevs.followersmanager.Helper.REQUEST_COUNT_KEY;
+import static com.gananidevs.followersmanager.Helper.USERS_PARCELABLE_ARRAYLIST;
 import static com.gananidevs.followersmanager.Helper.USER_PARCELABLE;
 import static com.gananidevs.followersmanager.Helper.changeButtonTextAndColor;
+import static com.gananidevs.followersmanager.Helper.getMinutesLeft;
+import static com.gananidevs.followersmanager.Helper.incrementApiRequestCount;
+import static com.gananidevs.followersmanager.Helper.proceedWithApiCall;
 import static com.gananidevs.followersmanager.Helper.setFollowBtnAppearance;
+import static com.gananidevs.followersmanager.Helper.showSnackBar;
 
 public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdapter.UsersViewHolder> {
 
@@ -106,6 +110,11 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
             setFollowBtnAppearance(context, userItem.id, holder.followUnfollowButton);
         }
 
+        if(userItem.id == activeSession.getUserId()){
+            holder.followStatusButton.setVisibility(View.GONE);
+            holder.followUnfollowButton.setVisibility(View.GONE);
+        }
+
         try{
             Glide.with(context).load(userItem.profileImageUrlHttps).into(holder.profileImage);
         }catch (Exception e){
@@ -162,33 +171,44 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
                 final String userScreenName = currentUserItem.screenName;
 
                 if(viewId == nameTv.getId() || viewId == screenNameTv.getId() || viewId == profileImage.getId()){
-                    viewProfile(context,userItemsList.get(getAdapterPosition()));
+                    viewProfile(context,getAdapterPosition());
 
                 }else if(viewId == followUnfollowButton.getId()){
 
-                    // follow or unfollow users as neccessary
                     String btnText = followUnfollowButton.getText().toString();
 
-                    if(btnText.equals(context.getString(R.string.follow_all_lowercase))){
+                    // to remove a user from whitelist does not need to check api request, cos that does not need twitter
+                    if(btnText.equals(context.getString(R.string.remove))){
+                        showProgressHideButtonText(btnProgressBar, followUnfollowButton, context);
+                        // remove the specified user from whitelist
+                        removeFromWhitelist(userId,userScreenName);
 
-                        if(!isApiRequestActive) {
-                            // follow the specific user
-                            isApiRequestActive = true;
-                            showProgressHideButtonText(btnProgressBar, followUnfollowButton, context);
+                    }else if(!isApiRequestActive){  // follow or unfollow user
 
-                            int delay = new Random().nextInt(1000) + 1000;
-                            new Handler().postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    followUser(userId);
-                                }
-                            }, delay);
-                        }
+                        //showProgressHideButtonText(btnProgressBar, followUnfollowButton, context);
+                        long interval = System.currentTimeMillis() - MainActivity.last15MinTimeStamp;
 
-                    }else if(btnText.equals(context.getString(R.string.unfollow_all_lowercase))){
-                        if(!isApiRequestActive) {
-                            // unfollow the specified user
-                            new AlertDialog.Builder(context).setTitle("confirm action")
+                        if (proceedWithApiCall(interval)) {
+                            // follow or unfollow users as neccessary
+
+                            if (btnText.equals(context.getString(R.string.follow_all_lowercase))) {
+
+                                // follow the specific user
+                                isApiRequestActive = true;
+                                showProgressHideButtonText(btnProgressBar, followUnfollowButton, context);
+
+                                int delay = new Random().nextInt(1000) + 1000;
+                                new Handler().postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        followUser(userId);
+                                    }
+                                }, delay);
+
+                            } else if (btnText.equals(context.getString(R.string.unfollow_all_lowercase))) {
+
+                                // unfollow the specified user
+                                new AlertDialog.Builder(context).setTitle("confirm action")
                                     .setMessage(context.getString(R.string.unfollow_all_lowercase) + " " + userScreenName + "?")
                                     .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
                                         @Override
@@ -207,16 +227,21 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
                                         }
                                     }).setNegativeButton(context.getString(R.string.cancel), null)
                                     .show();
+                            }
+
+                        } else { // request limit has been reached, so show appropriate message
+
+                            if(btnText.equals(context.getString(R.string.unfollow_all_lowercase))){
+                                showDialogAndFeignWork(userScreenName);
+                            }else{
+                                placeboAction();
+                            }
+
                         }
 
-                    }else if(btnText.equals(context.getString(R.string.remove))){
-                        showProgressHideButtonText(btnProgressBar, followUnfollowButton, context);
-                        // remove the specified user from whitelist
-                        removeFromWhitelist(userId,userScreenName);
+                    } // api request is currently active endif
 
-                    }
-
-                }else if(viewId == dropDownArrow.getId()){
+                }else if(viewId == dropDownArrow.getId()){ // if dropdown arrow was clicked
                     final String REQUEST_FOLLOW_BACK = context.getString(R.string.Request_follow_back);
                     final String ADD_TO_WHITELIST = context.getString(R.string.Add_to_whitelist);
                     PopupMenu popupMenu = new PopupMenu(context,v);
@@ -254,6 +279,7 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
                         changeButtonTextAndColor(context,followUnfollowButton,R.string.unfollow_all_lowercase,R.color.colorAccent);
                         MainActivity.friendsIdsList.add(userId);
                         isApiRequestActive = false;
+                        incrementApiRequestCount();
                     }
 
                     @Override
@@ -275,6 +301,7 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
                         changeButtonTextAndColor(context,followUnfollowButton,R.string.follow_all_lowercase,R.color.colorPrimary);
                         MainActivity.friendsIdsList.remove(userId);
                         isApiRequestActive = false;
+                        incrementApiRequestCount();
                     }
 
                     @Override
@@ -285,6 +312,34 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
                     }
                 });
             }
+        }
+
+        private void showDialogAndFeignWork(String screenName) {
+            // unfollow the specified user
+            new AlertDialog.Builder(context).setTitle(context.getString(R.string.confirm_action))
+                    .setMessage(context.getString(R.string.unfollow_all_lowercase) + " " + screenName + "?")
+                    .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                        placeboAction();
+
+                        }
+                    }).setNegativeButton(context.getString(R.string.cancel), null)
+                    .show();
+        }
+
+        private void placeboAction() {
+            showProgressHideButtonText(btnProgressBar, followUnfollowButton, context);
+            int delay = new Random().nextInt(1000) + 1000;
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    int minutesLeft = getMinutesLeft(MainActivity.last15MinTimeStamp);
+                    showSnackBar(UsersListActivity.recyclerView, minutesLeft);
+                    hideProgressShowButtonText(btnProgressBar, followUnfollowButton, context);
+                }
+            }, delay);
         }
 
 
@@ -298,6 +353,7 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
                 public void onComplete(@NonNull Task<Void> task) {
 
                     if(task.isSuccessful()){
+                        hideProgressShowButtonText(btnProgressBar,followUnfollowButton,context);
                         removeCurrentItem();
                         Toast.makeText(context,screenName+" removed successfully",Toast.LENGTH_SHORT).show();
                     }else{
@@ -317,9 +373,9 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
                 @Override
                 public void onComplete(@NonNull Task<Void> task) {
                     if(task.isSuccessful()){
+                        hideProgressShowButtonText(btnProgressBar,followUnfollowButton,context);
                         removeCurrentItem();
                         MainActivity.nonFollowersIdsList.remove(Long.valueOf(whitelistedUserId));
-                        hideProgressShowButtonText(btnProgressBar,followUnfollowButton,context);
                         Toast.makeText(context,whitelistedUserName+" added to whitelist",Toast.LENGTH_SHORT).show();
                     }else{
                         Toast.makeText(context,task.getException().getMessage(),Toast.LENGTH_SHORT).show();
@@ -330,9 +386,10 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
         }
 
 
-        private void viewProfile(Context ctx, UserItem user) {
+        private void viewProfile(Context ctx, int userIndex) {
             Intent intent = new Intent(ctx,UserProfileActivity.class);
-            intent.putExtra(USER_PARCELABLE,user);
+            intent.putParcelableArrayListExtra(USERS_PARCELABLE_ARRAYLIST,userItemsList);
+            intent.putExtra(CURRENT_USER_INDEX,userIndex);
             ctx.startActivity(intent);
         }
 
@@ -357,15 +414,15 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
         radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
-                String requestTweet = "@"+userScreenName+" ";
-                if(checkedId == R.id.pls_follow_back_radio){
+            String requestTweet = "@"+userScreenName+" ";
+            if(checkedId == R.id.pls_follow_back_radio){
 
-                    requestTweet += context.getString(R.string.please_follow_back);
+                requestTweet += context.getString(R.string.please_follow_back);
 
-                }else if(checkedId == R.id.kindly_follow_back_radio){
-                    requestTweet += context.getString(R.string.kindly_follow_back);
-                }
-                tweetTextTv.setText(requestTweet);
+            }else if(checkedId == R.id.kindly_follow_back_radio){
+                requestTweet += context.getString(R.string.kindly_follow_back);
+            }
+            tweetTextTv.setText(requestTweet);
             }
 
         });

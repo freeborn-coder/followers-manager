@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="colorPrimary">#0C4E6A</color>
-    <color name="colorPrimaryDark">#0C4E6A</color>
-    <color name="colorAccent">#D81B60</color>
+    <color name="colorPrimaryDark">#093F56</color>
+    <color name="colorAccent">#E82E57</color>
     <color name="divider_line_color">#55bbbbbb</color>
     <color name="main_activity_low_emphasis_text_color">#308AB1</color>
     <color name="user_item_name_light_gray">#E8E8E8</color>

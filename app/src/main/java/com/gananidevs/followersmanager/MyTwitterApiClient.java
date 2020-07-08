@@ -49,17 +49,10 @@ public class MyTwitterApiClient extends TwitterApiClient {
         return getService(SearchTweetsCustomService.class);
     }
 
-    public StatusesRetweetersCustomService getStatusesRetweetersCustomService(){
-        return getService(StatusesRetweetersCustomService.class);
+    public SearchUsersCustomService getSearchUsersCustomService(){
+        return getService(SearchUsersCustomService.class);
     }
 
-    public StatusesLookupCustomService getStatusesLookupCustomService(){
-        return getService(StatusesLookupCustomService.class);
-    }
-
-    public StatusesRetweetsCustomService getStatusesRetweetsCustomService(){
-        return getService(StatusesRetweetsCustomService.class);
-    }
 
 }
 
@@ -103,17 +96,7 @@ interface SearchTweetsCustomService{
     Call<ResponseBody> get(@Query("q") String query, @Query("count") int count, @Query("include_entities") boolean include_entities); // q should be urlencoded
 }
 
-interface StatusesRetweetersCustomService{
-    @GET("1.1/statuses/retweeters/ids.json")
-    Call<ResponseBody> get(@Query("id") long id,@Query("stringify_ids") boolean stringifyIds);
-}
-
-interface StatusesLookupCustomService{
-    @GET("1.1/statuses/lookup.json")
-    Call<ResponseBody> get(@Query("id") String ids);
-}
-
-interface StatusesRetweetsCustomService{
-    @GET("1.1/statuses/retweets/{id}.json")
-    Call<ResponseBody> get(@Path("id") long id);
+interface SearchUsersCustomService{
+    @GET("1.1/users/search.json")
+    Call<ResponseBody> search(@Query("q") String query, @Query("count") int count, @Query("include_entities") boolean include_entities); // q should be urlencodedjkm,
 }

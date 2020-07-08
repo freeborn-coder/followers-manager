@@ -2,12 +2,10 @@ package com.gananidevs.followersmanager;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.util.TypedValue;
-import android.widget.Button;
-
-import androidx.core.content.ContextCompat;
+import android.view.View;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.snackbar.Snackbar;
 import com.twitter.sdk.android.core.Result;
 
 import org.json.JSONArray;
@@ -22,19 +20,25 @@ public class Helper {
     private Helper(){}
 
     public static final int IDS_COUNT_TO_RETRIEVE = 5000;
+    public static final String FOLLOWERS_IDS_TYPE = "followers ids";
+    public static final String OLD_AND_NEW_FOLLOWERS_TYPE = "old and new followers ids";
 
     public static final int SLEEP_BOUND = 1500;
 
-    public static final String USER_PARCELABLE = "user_parcelable";
+    public static final String USER_PARCELABLE = "user parcelable";
+    public static final String USERS_PARCELABLE_ARRAYLIST = "users parcelable arraylist";
+    public static final String CURRENT_USER_INDEX = "current user index";
+
 
     public static final String DATABASE_URL = "https://followers-manager-for-twitter.firebaseio.com/";
 
     // Recycler view pagination constants
-    public static final int ITEM_COUNT = 50;
-    public static final int VIEW_THRESHOLD = 5; // made this 15 temp. change to 10 if anything is wrong
+    public static final int VIEW_THRESHOLD = 8; // made this 15 temp. change to 10 if anything is wrong
 
     //Names for list to help activity identify which list to use
+
     public static final String NON_FOLLOWERS = "Non Followers";
+    public static final String SCREEN_NAME_OF_USER = "screenNameOfUser";
     public static final String LIST_NAME = "list_name";
     public static final String MUTUAL_FOLLOWERS = "Mutual Followers";
     public static final String FANS = "Fans";
@@ -43,6 +47,49 @@ public class Helper {
     public static final String NEW_UNFOLLOWERS = "New Unfollowers";
     public static final String FOLLOWERS = "Followers";
     public static final String FOLLOWING = "Following";
+    public static final String A_USERS_FOLLOWERS = "a users followers";
+    public static final String A_USERS_FOLLOWING = "a users following";
+    public static final String USER_ID = "user_id";
+    public static final String SEARCH_USERS = "search users";
+
+
+
+    // Twitter api Request Limits. check b4 following or unfollowing users
+    public static final int FIFTEEN_MINUTES = 1000*60*15;
+    public static final int MAX_REQUEST_COUNT = 15;
+    public static final String REQUEST_COUNT_KEY = "currentRequestCount";
+    public static final String LAST_TIMESTAMP_KEY = "last15minuteTimestamp";
+
+    public static boolean proceedWithApiCall(Long interval){
+        if(interval > FIFTEEN_MINUTES){
+            long timeStamp = System.currentTimeMillis();
+            MainActivity.sp.edit().putLong(LAST_TIMESTAMP_KEY,timeStamp).apply();
+            MainActivity.last15MinTimeStamp = timeStamp;
+            MainActivity.apiRequestCount = 0;
+            return true;
+        }else if(MainActivity.apiRequestCount < MAX_REQUEST_COUNT){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    /*
+     * increment request count and save to sharedpreferences
+     */
+    public static void incrementApiRequestCount(){
+        ++MainActivity.apiRequestCount;
+        MainActivity.sp.edit().putInt(REQUEST_COUNT_KEY,MainActivity.apiRequestCount).apply();
+    }
+
+    public static void showSnackBar(View v, int minutesLeft){
+        Snackbar.make(v,v.getContext().getString(R.string.cannot_carry_out_action)+" "+minutesLeft+v.getContext().getString(R.string.minutes),Snackbar.LENGTH_LONG).show();
+    }
+
+    public static int getMinutesLeft(long last15MinTimeStamp){
+        return (int)(last15MinTimeStamp + FIFTEEN_MINUTES - System.currentTimeMillis())/(1000 * 60);
+    }
+
 
     // this method returns a number that has been formatted to include commas, as a string
     public static String insertCommas(int number){

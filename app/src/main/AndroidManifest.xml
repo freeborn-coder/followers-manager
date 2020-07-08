@@ -3,6 +3,7 @@
     package="com.gananidevs.followersmanager">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <application
         android:allowBackup="true"
@@ -10,7 +11,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme.MyTheme">
+        android:theme="@style/AppTheme">
         <activity android:name="com.gananidevs.followersmanager.UserProfileActivity"></activity>
         <activity
             android:name="com.gananidevs.followersmanager.UsersListActivity"
@@ -29,7 +30,7 @@
 
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713" />
+            android:value="@string/app_test_id_for_ads" />
     </application>
 
 </manifest>
