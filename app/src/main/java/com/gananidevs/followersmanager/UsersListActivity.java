@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -24,7 +25,9 @@ import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
+import com.twitter.sdk.android.core.models.User;
 
+import java.lang.reflect.Array;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -39,6 +42,7 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
     private LinearLayoutManager linearLayoutManager;
     public static boolean isLoading = true;
     public static ProgressBar progressBar;
+    public static ConstraintLayout constraintLayout;
     private UsersRecyclerAdapter recyclerAdapter;
     public static RecyclerView recyclerView;
     ArrayList<Long> userIdsList; // idslist is for user ids
@@ -63,7 +67,14 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_users_list);
 
-        loadAds();
+
+        // get the Ad view
+        adView = findViewById(R.id.banner_ad_view);
+        if(MainActivity.isShowingAds)
+            loadAds();
+        else
+            adView.setVisibility(View.GONE);
+
 
         twitterSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
         twitterApiClient = new MyTwitterApiClient(twitterSession);
@@ -76,6 +87,7 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
             chooseList();
         }catch (Exception e){e.printStackTrace();}
 
+        constraintLayout = findViewById(R.id.constraint_layout);
         recyclerView = findViewById(R.id.user_items_rv);
         recyclerView.setHasFixedSize(true);
 
@@ -125,7 +137,7 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
             }
         });
 
-        if(userIdsList.size() > itemCount){
+        if(userIdsList.size() > itemCount  || getIntent().getStringExtra(LIST_NAME).equals(NEW_UNFOLLOWERS) || getIntent().getStringExtra(LIST_NAME).equals(NEW_FOLLOWERS)){
             loadRecyclerViewData(0,itemCount,progressBar,recyclerAdapter,userIdsList);
         }else if(userIdsList.size() > 0){
             loadRecyclerViewData(0,userIdsList.size(),progressBar,recyclerAdapter,userIdsList);
@@ -134,7 +146,6 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
     }
 
     private void loadAds() {
-        adView = findViewById(R.id.banner_ad_view);
 
         adView.setAdListener(new AdListener() {
             @Override
@@ -146,7 +157,7 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
             @Override
             public void onAdFailedToLoad(int i) {
                 super.onAdFailedToLoad(i);
-                adView.loadAd(new AdRequest.Builder().build());
+                if(isNetworkConnected(UsersListActivity.this)) adView.loadAd(new AdRequest.Builder().build());
             }
 
             @Override
@@ -165,14 +176,13 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
             @Override
             public void onAdClosed() {
                 super.onAdClosed();
-                //++MainActivity.numberOfAdsClosed;
                 finish();
             }
 
             @Override
             public void onAdFailedToLoad(int i) {
                 super.onAdFailedToLoad(i);
-                mInterstitialAd.loadAd(new AdRequest.Builder().build());
+                if(isNetworkConnected(UsersListActivity.this)) mInterstitialAd.loadAd(new AdRequest.Builder().build());
             }
         });
 
@@ -341,6 +351,12 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
                     String resultString = getResultString(result);
 
                     if(loadUserItemsIntoAdapter(resultString,recyclerAdapter)){
+
+                        if(getIntent().getStringExtra(LIST_NAME).equals(NEW_UNFOLLOWERS)) {
+                            ArrayList<Long> suspendedUserIds = getSuspendedUserIds();
+                            if (suspendedUserIds.size() > 0) addSuspendedUsers(suspendedUserIds);
+                        }
+
                         ++page_number;
                         isLoading = true;
                         pb.setVisibility(View.GONE);
@@ -350,10 +366,32 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
 
                 @Override
                 public void failure(TwitterException exception) {
-                    Toast.makeText(UsersListActivity.this,exception.getMessage(),Toast.LENGTH_SHORT).show();
-                    exception.printStackTrace();
-                    isLoading = true;
-                    pb.setVisibility(View.GONE);
+
+                    if(exception.getMessage().toLowerCase().contains("status: 404")){ // that means there are some suspended users
+
+                        if(getIntent().getStringExtra(LIST_NAME).equals(NEW_UNFOLLOWERS)) {
+                            ArrayList<Long> suspendedUserIds = getSuspendedUserIds();
+                            // add each item to indicate a disabled user
+                            addSuspendedUsers(suspendedUserIds);
+                            pb.setVisibility(View.GONE);
+                        }
+
+                    }else{
+
+                        Toast.makeText(UsersListActivity.this,exception.getMessage(),Toast.LENGTH_SHORT).show();
+                        exception.printStackTrace();
+                        isLoading = true;
+                        pb.setVisibility(View.GONE);
+                    }
+                }
+
+                private void addSuspendedUsers(ArrayList<Long> disabledIdsList) {
+                   int start = userItemsList.size();
+                    for(Long id:disabledIdsList){
+                        UserItem item = new UserItem(""+id,true);
+                        userItemsList.add(item);
+                    }
+                    recyclerAdapter.notifyItemRangeInserted(start,disabledIdsList.size());
                 }
 
             });
@@ -362,20 +400,31 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
 
     }
 
+    private ArrayList<Long> getSuspendedUserIds() {
+        int disableUserCount = userIdsList.size() - userItemsList.size();
+        ArrayList<Long> disabledUserIdsList = new ArrayList<>();
+        if(disableUserCount > 0) {
+            ArrayList<Long> enabledUserIdsList = new ArrayList<>();
+
+            // get enabled user ids
+            for (UserItem i : userItemsList) {
+                enabledUserIdsList.add(i.id);
+            }
+
+            for (Long id : userIdsList) {
+                if (!enabledUserIdsList.contains(id)) {
+                    disabledUserIdsList.add(id);
+                }
+            }
+        }
+        return disabledUserIdsList;
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         String listName = getIntent().getStringExtra(LIST_NAME);
 
-        if(item.getItemId() == R.id.action_clear){
-            if(listName.equals(NEW_FOLLOWERS)){
-                MainActivity.newFollowersIdsList.clear();
-            }else if(listName.equals(NEW_UNFOLLOWERS)){
-                MainActivity.newUnfollowersIdsList.clear();
-            }
-            userItemsList.clear();
-            recyclerAdapter.notifyDataSetChanged();
-            userIdsList.clear();
-        }else if(item.getItemId() == android.R.id.home){
+        if(item.getItemId() == android.R.id.home){
             onBackPressed();
         }
         return true;
@@ -383,7 +432,7 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
 
     @Override
     public void onBackPressed() {
-        if(mInterstitialAd.isLoaded()){
+        if(MainActivity.isShowingAds && mInterstitialAd.isLoaded()){
             mInterstitialAd.show();
         }else {
             super.onBackPressed();
@@ -393,10 +442,7 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         String listName = getIntent().getStringExtra(LIST_NAME);
-        if(listName.equals(NEW_UNFOLLOWERS) || listName.equals(NEW_FOLLOWERS)){
-            getMenuInflater().inflate(R.menu.clear_menu, menu);
-            return true;
-        }else if(listName.equals(SEARCH_USERS)){
+        if(listName.equals(SEARCH_USERS)){
             getMenuInflater().inflate(R.menu.users_search_menu, menu);
             MenuItem searchMenuItem = menu.findItem(R.id.action_search);
             searchView = (SearchView) searchMenuItem.getActionView();

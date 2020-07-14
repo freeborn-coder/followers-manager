@@ -39,8 +39,8 @@
     <string name="kindly_follow_back">kindly follow back</string>
     <string name="please_follow_back">please follow back</string>
     <string name="send">send</string>
-    <string name="Request_follow_back">Request follow back</string>
-    <string name="Add_to_whitelist">Add to whitelist</string>
+    <string name="request_follow_back">Request follow back</string>
+    <string name="add_to_whitelist">Add to whitelist</string>
     <string name="cannot_carry_out_action">Cannot carry out action right now, pls wait for</string>
     <string name="minutes">minutes</string>
     <string name="saved">Saved!</string>
@@ -67,4 +67,19 @@
     <string name="interstitial_test_ad_unit_id">ca-app-pub-3940256099942544/1033173712</string>
     <string name="native_test_ad_unit_id">ca-app-pub-3940256099942544/2247696110</string>
     <string name="app_test_id_for_ads">ca-app-pub-3940256099942544~3347511713</string>
+    <string name="log_out">Log out</string>
+    <string name="share_this_app">Share this App</string>
+    <string name="rate_this_app">Rate this app</string>
+    <string name="open_drawer">open</string>
+    <string name="close_drawer">close</string>
+    <string name="app_share_intent_subject">Followers Manager App Link</string>
+    <string name="exit_confirm_dialog_msg">Sure you want to exit?</string>
+    <string name="suspended_user">suspended user</string>
+    <string name="whitelisted_user">whitelisted user</string>
+    <string name="view_followers">View followers</string>
+    <string name="view_following">View following</string>
+    <string name="remove_from_whitelist">Remove from Whitelist</string>
+    <string name="just_view_on_twitter">View on twitter</string>
+    <string name="remove_ads">Remove Ads</string>
+    <string name="in_app_purchase_note">* Note that this is not a Subscription. It is a one-time purchase. After it expires, you can re-purchase it again.</string>
 </resources>

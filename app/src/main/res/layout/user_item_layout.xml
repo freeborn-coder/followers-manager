@@ -105,6 +105,19 @@
             app:layout_constraintTop_toBottomOf="@id/screen_name_tv"
             app:layout_constraintStart_toEndOf="@+id/profile_image" />
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/whitelisted_status_tv"
+            android:text="@string/whitelisted_user"
+            android:layout_marginStart="8dp"
+            android:textColor="@color/dark_4444"
+            android:textSize="12sp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="@id/follow_status_button"
+            app:layout_constraintTop_toTopOf="@id/follow_status_button"
+            app:layout_constraintEnd_toEndOf="parent" />
+
         <RelativeLayout
             android:id="@+id/follow_unf_btn_container"
             android:layout_width="wrap_content"

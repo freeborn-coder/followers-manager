@@ -19,9 +19,17 @@ public class UserItem implements Parcelable {
     String location;
     String name;
     String screenName;
-    boolean isVerified;
+    boolean isVerified = false;
     String url;
-    boolean followbackRequested = false;
+    boolean followbackRequested;
+    boolean isSuspendedUser = false;
+
+    public UserItem(){}
+
+    public UserItem(String name, boolean isSuspendedUser){
+        this.name = name;
+        this.isSuspendedUser = isSuspendedUser;
+    }
 
     public UserItem(User user){
         profileImageUrlHttps = user.profileImageUrlHttps.replace("_normal","");
@@ -36,6 +44,7 @@ public class UserItem implements Parcelable {
         screenName = user.screenName;
         isVerified = user.verified;
         url = user.url;
+        isSuspendedUser = false;
     }
 
     // create a user item from json object
@@ -56,6 +65,7 @@ public class UserItem implements Parcelable {
             url = (url == null || url.isEmpty() || url.equals("null"))? "":url;
             description = (description == null || description.isEmpty())? "":description;
         }catch (Exception e){e.printStackTrace();}
+        isSuspendedUser = false;
     }
 
     protected UserItem(Parcel in) {
@@ -71,23 +81,8 @@ public class UserItem implements Parcelable {
         screenName = in.readString();
         isVerified = in.readByte() != 0;
         url = in.readString();
-    }
-
-    public static final Creator<UserItem> CREATOR = new Creator<UserItem>() {
-        @Override
-        public UserItem createFromParcel(Parcel in) {
-            return new UserItem(in);
-        }
-
-        @Override
-        public UserItem[] newArray(int size) {
-            return new UserItem[size];
-        }
-    };
-
-    @Override
-    public int describeContents() {
-        return 0;
+        followbackRequested = in.readByte() != 0;
+        isSuspendedUser = in.readByte() != 0;
     }
 
     @Override
@@ -104,5 +99,24 @@ public class UserItem implements Parcelable {
         dest.writeString(screenName);
         dest.writeByte((byte) (isVerified ? 1 : 0));
         dest.writeString(url);
+        dest.writeByte((byte) (followbackRequested ? 1 : 0));
+        dest.writeByte((byte) (isSuspendedUser ? 1 : 0));
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public static final Creator<UserItem> CREATOR = new Creator<UserItem>() {
+        @Override
+        public UserItem createFromParcel(Parcel in) {
+            return new UserItem(in);
+        }
+
+        @Override
+        public UserItem[] newArray(int size) {
+            return new UserItem[size];
+        }
+    };
 }

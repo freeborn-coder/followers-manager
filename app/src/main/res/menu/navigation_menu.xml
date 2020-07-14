@@ -1,37 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
-
-    <group android:checkableBehavior="single">
-
-        <item android:title="@string/switch_account"
-            android:icon="@drawable/exit_icon"
-            android:id="@+id/switch_account_menu"/>
-    </group>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <group android:id="@+id/ad_removal_menu_group" android:checkableBehavior="none">
-        <item android:title="@string/remove_ads_temporarily_free"
-            android:icon="@drawable/ic_shop"
-            android:id="@+id/remove_ads_temp_menu"/>
-
         <item android:title="@string/remove_ads"
-            android:icon="@drawable/ic_shop"
-            android:id="@+id/remove_ads_for_life_menu"/>
+            android:icon="@drawable/ic_shop_24dp"
+            android:id="@+id/action_remove_ads"/>
     </group>
 
     <group android:id="@+id/menu_bottom"
         android:checkableBehavior="none">
 
-        <item android:title="@string/privacy_policy"
-            android:id="@+id/privacy_menu"
-            android:icon="@drawable/ic_security"/>
+        <item android:title="@string/share_this_app"
+            android:id="@+id/action_share_app"
+            android:icon="@drawable/ic_share_24dp"/>
 
-        <item android:title="@string/share_with_friends"
-            android:id="@+id/share_menu"
-            android:icon="@drawable/share_icon_black"/>
-
-        <item android:title="Rate this app"
-            android:id="@+id/rate_menu"
-            android:icon="@drawable/ic_star"/>
+        <item android:title="@string/rate_this_app"
+            android:id="@+id/action_rate_app"
+            android:icon="@drawable/ic_stars_24dp"/>
     </group>
+
+    <group android:checkableBehavior="none">
+        <item android:title="@string/log_out"
+            android:icon="@drawable/ic_exit"
+            android:id="@+id/action_log_out"/>
+    </group>
+
 </menu>

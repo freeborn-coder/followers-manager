@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="18dp"
+    android:elevation="4dp"
+    android:background="@color/colorPrimary"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/message_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Do you want to perform action?"
+        android:textColor="@color/tw__solid_white"
+        android:textSize="19sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.17" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/positive_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="yes"
+        android:textSize="13sp"
+        android:layout_marginTop="35dp"
+        android:backgroundTint="@color/colorAccent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:textColor="@color/tw__solid_white"
+        app:layout_constraintTop_toBottomOf="@+id/message_tv" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/negative_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/faded_white"
+        android:textColor="@color/very_dark_222"
+        android:textSize="13sp"
+        android:text="no"
+        android:layout_marginEnd="7dp"
+        app:layout_constraintEnd_toStartOf="@id/positive_btn"
+        app:layout_constraintTop_toTopOf="@id/positive_btn" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

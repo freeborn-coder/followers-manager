@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="180dp"
-    android:gravity="bottom|center"
-    android:paddingBottom="14dp"
-    android:background="@color/colorPrimary">
+    android:layout_height="170dp"
+    android:gravity="center"
+    android:paddingStart="20dp"
+    android:background="@color/tw__solid_white">
 
     <androidx.appcompat.widget.LinearLayoutCompat
         android:layout_width="wrap_content"
@@ -22,15 +22,16 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/app_name"
-            android:textColor="@color/color_white"
-            android:textSize="15dp"/>
+            android:textColor="@color/transparent_white"
+            android:textSize="15dp"
+            android:visibility="gone"/>
         <androidx.appcompat.widget.AppCompatTextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="14dp"
-            android:textColor="@color/light_blue"
-            android:id="@+id/twitter_username_tv"
-            android:text="@string/for_twitter"/>
+            android:textSize="18sp"
+            android:textColor="@color/dark_4444"
+            android:id="@+id/nav_header_username_tv"
+            android:text="\@username"/>
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 

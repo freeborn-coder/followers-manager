@@ -27,6 +27,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.RatingBar;
 import android.widget.TextView;
@@ -40,18 +41,23 @@ import com.bumptech.glide.request.target.Target;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdLoader;
 import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.InterstitialAd;
 import com.google.android.gms.ads.formats.MediaView;
 import com.google.android.gms.ads.formats.UnifiedNativeAd;
 import com.google.android.gms.ads.formats.UnifiedNativeAdView;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
+import com.twitter.sdk.android.core.models.User;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -61,15 +67,19 @@ import okhttp3.ResponseBody;
 import static com.gananidevs.followersmanager.Helper.A_USERS_FOLLOWERS;
 import static com.gananidevs.followersmanager.Helper.A_USERS_FOLLOWING;
 import static com.gananidevs.followersmanager.Helper.CURRENT_USER_INDEX;
+import static com.gananidevs.followersmanager.Helper.DATABASE_URL;
 import static com.gananidevs.followersmanager.Helper.LIST_NAME;
 import static com.gananidevs.followersmanager.Helper.SCREEN_NAME_OF_USER;
 import static com.gananidevs.followersmanager.Helper.USERS_PARCELABLE_ARRAYLIST;
 import static com.gananidevs.followersmanager.Helper.USER_ID;
 import static com.gananidevs.followersmanager.Helper.changeButtonTextAndColor;
+import static com.gananidevs.followersmanager.Helper.checkWhetherToAskUserToRateApp;
 import static com.gananidevs.followersmanager.Helper.getMinutesLeft;
 import static com.gananidevs.followersmanager.Helper.incrementApiRequestCount;
 import static com.gananidevs.followersmanager.Helper.insertCommas;
+import static com.gananidevs.followersmanager.Helper.isNetworkConnected;
 import static com.gananidevs.followersmanager.Helper.proceedWithApiCall;
+import static com.gananidevs.followersmanager.Helper.showRequestFollowBackBottomSheetDialog;
 import static com.gananidevs.followersmanager.Helper.showSnackBar;
 import static com.gananidevs.followersmanager.UsersRecyclerAdapter.hideProgressShowButtonText;
 import static com.gananidevs.followersmanager.UsersRecyclerAdapter.showProgressHideButtonText;
@@ -80,8 +90,8 @@ public class UserProfileActivity extends AppCompatActivity {
     private static final long ANIM_START_DELAY = 100;
 
     boolean isAdLoaded = false;
-    private ImageView profileImage, verifiedIcon, linkIcon;
-    private TextView nameTv, screenNameTv,followersCountTv,followingCountTv, followersTv, followingTv, twitterLinkTv;
+    private ImageView profileImage, verifiedIcon, linkIcon, popupIcon;
+    private TextView nameTv, screenNameTv,followersCountTv,followingCountTv, followersTv, followingTv, twitterLinkTv, whitelistStatusTv;
     private MaterialButton followUnfollowBtn, followStatusBtn;
     private TextInputEditText descriptionEt, locationEt, dateCreatedEt, userLinkEt;
     private ProgressBar btnProgressBar;
@@ -91,10 +101,15 @@ public class UserProfileActivity extends AppCompatActivity {
     private Bitmap bitmap;
     private String imageTitle, imageDescription;
     private ConstraintLayout constraintLayout;
-    UserItem currentUserItem;
+    UserItem currentItem;
     private int currentUserIndex;
     private UnifiedNativeAdView nativeAdView;
     private InterstitialAd mInterstitialAd;
+    private BottomSheetDialog dialog;
+    private MyTwitterApiClient twitterApiClient;
+    private ProgressBar progressBar;
+    private DatabaseReference databaseReference;
+    private AdLoader adLoader;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,14 +120,18 @@ public class UserProfileActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         setActionBarTitle(getString(R.string.profile));
 
-        loadAds();
+        if(MainActivity.isShowingAds)
+            loadAds();
+
+
         initializeViews();
         twitterSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
+        twitterApiClient = new MyTwitterApiClient(twitterSession);
 
         userItemArrayList = getIntent().getParcelableArrayListExtra(USERS_PARCELABLE_ARRAYLIST);
         currentUserIndex = getIntent().getIntExtra(CURRENT_USER_INDEX,0);
-        currentUserItem = userItemArrayList.get(currentUserIndex);
-        loadDataIntoViews(currentUserItem);
+        currentItem = userItemArrayList.get(currentUserIndex);
+        loadDataIntoViews(currentItem);
 
     }
 
@@ -195,17 +214,56 @@ public class UserProfileActivity extends AppCompatActivity {
 
         });
 
+        if(Helper.isWhielisted(userItem.id)){
+            whitelistStatusTv.setVisibility(View.VISIBLE);
+        }else{
+            whitelistStatusTv.setVisibility(View.GONE);
+        }
+
         linkIcon.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                try {
-                    if(!userItem.url.isEmpty()) {
-                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(userItem.url));
-                        startActivity(intent);
-                    }
-                }catch (Exception e){e.printStackTrace();
-                    Toast.makeText(UserProfileActivity.this,e.getMessage(),Toast.LENGTH_SHORT).show();
+            try {
+                if(!userItem.url.isEmpty()) {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(userItem.url));
+                    startActivity(intent);
                 }
+            }catch (Exception e){e.printStackTrace();
+                Toast.makeText(UserProfileActivity.this,e.getMessage(),Toast.LENGTH_SHORT).show();
+            }
+            }
+        });
+
+        popupIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                PopupMenu popupMenu = new PopupMenu(UserProfileActivity.this,v);
+                Menu menu = popupMenu.getMenu();
+                menu.add(getString(R.string.view_followers));
+                menu.add(getString(R.string.view_following));
+                menu.add(getString(R.string.just_view_on_twitter));
+
+                // Add menu options
+                if(userItem.id != twitterSession.getUserId()) {
+                    if (!Helper.isFollower(userItem.id)) {
+
+                        if(Helper.isFriend(userItem.id)) {
+                            menu.add(getString(R.string.request_follow_back));
+
+                            if (Helper.isWhielisted(userItem.id)) {
+                                menu.add(getString(R.string.remove_from_whitelist));
+                            } else {
+                                menu.add(getString(R.string.add_to_whitelist));
+                            }
+                        }
+
+                    }
+                }
+
+                // Add menu actions
+                popupMenu.setOnMenuItemClickListener(new MyPopMenuItemClickListener());
+                popupMenu.show();
+
             }
         });
 
@@ -336,6 +394,7 @@ public class UserProfileActivity extends AppCompatActivity {
             }
         });
 
+        progressBar.setVisibility(View.GONE);
 
     }
 
@@ -396,22 +455,30 @@ public class UserProfileActivity extends AppCompatActivity {
 
             if(id == followersCountTv.getId() || id == followersTv.getId()){
                 // view user's followers
-                Intent intent = new Intent(UserProfileActivity.this,UsersListActivity.class);
-                intent.putExtra(LIST_NAME,A_USERS_FOLLOWERS);
-                intent.putExtra(USER_ID,currentUserItem.id);
-                intent.putExtra(SCREEN_NAME_OF_USER,currentUserItem.screenName);
-                startActivity(intent);
+                viewUserFollowers();
 
             }else if(id == followingCountTv.getId() || id == followingTv.getId()){
                 //view user's following
-                Intent intent = new Intent(UserProfileActivity.this,UsersListActivity.class);
-                intent.putExtra(LIST_NAME,A_USERS_FOLLOWING);
-                intent.putExtra(USER_ID,currentUserItem.id);
-                intent.putExtra(SCREEN_NAME_OF_USER,currentUserItem.screenName);
-                startActivity(intent);
+                viewUserFollowing();
             }
 
         }
+    }
+
+    private void viewUserFollowing() {
+        Intent intent = new Intent(UserProfileActivity.this,UsersListActivity.class);
+        intent.putExtra(LIST_NAME,A_USERS_FOLLOWING);
+        intent.putExtra(USER_ID, currentItem.id);
+        intent.putExtra(SCREEN_NAME_OF_USER, currentItem.screenName);
+        startActivity(intent);
+    }
+
+    private void viewUserFollowers() {
+        Intent intent = new Intent(UserProfileActivity.this,UsersListActivity.class);
+        intent.putExtra(LIST_NAME,A_USERS_FOLLOWERS);
+        intent.putExtra(USER_ID, currentItem.id);
+        intent.putExtra(SCREEN_NAME_OF_USER, currentItem.screenName);
+        startActivity(intent);
     }
 
     private void followUser(final Long userId) {
@@ -424,7 +491,7 @@ public class UserProfileActivity extends AppCompatActivity {
                 followUnfollowBtn.setText(getString(R.string.unfollow_all_lowercase));
                 changeButtonTextAndColor(UserProfileActivity.this,followUnfollowBtn,R.string.unfollow_all_lowercase,R.color.colorAccent);
                 MainActivity.friendsIdsList.add(userId);
-                incrementApiRequestCount();
+                incrementApiRequestCount(UserProfileActivity.this);
             }
 
             @Override
@@ -446,7 +513,7 @@ public class UserProfileActivity extends AppCompatActivity {
                 followUnfollowBtn.setText(getString(R.string.unfollow_all_lowercase));
                 changeButtonTextAndColor(UserProfileActivity.this,followUnfollowBtn,R.string.follow_all_lowercase,R.color.follow_btn_back_color);
                 MainActivity.friendsIdsList.remove(userId);
-                incrementApiRequestCount();
+                incrementApiRequestCount(UserProfileActivity.this);
             }
 
             @Override
@@ -458,12 +525,16 @@ public class UserProfileActivity extends AppCompatActivity {
     }
 
     private void initializeViews() {
+        dialog = new BottomSheetDialog(UserProfileActivity.this);
+
+        popupIcon = findViewById(R.id.popup_icon);
         profileImage = findViewById(R.id.profile_image);
         verifiedIcon = findViewById(R.id.verified_icon);
         nameTv = findViewById(R.id.name_tv);
         screenNameTv = findViewById(R.id.screen_name_tv);
         followersCountTv = findViewById(R.id.followers_count_tv);
         followingCountTv = findViewById(R.id.following_count_tv);
+        whitelistStatusTv = findViewById(R.id.whitelisted_status_tv);
         followUnfollowBtn = findViewById(R.id.follow_unfollow_button);
         followStatusBtn = findViewById(R.id.follow_status_button);
         followersTv = findViewById(R.id.followers_tv);
@@ -478,10 +549,11 @@ public class UserProfileActivity extends AppCompatActivity {
         followersTv = findViewById(R.id.followers_tv);
         followingTv = findViewById(R.id.following_tv);
         constraintLayout = findViewById(R.id.constraint_layout);
+        progressBar = findViewById(R.id.progress_bar);
     }
 
     private void loadAds() {
-        AdLoader adLoader = new AdLoader.Builder(this,getString(R.string.native_test_ad_unit_id))
+        adLoader = new AdLoader.Builder(this,getString(R.string.native_test_ad_unit_id))
                 .forUnifiedNativeAd(new UnifiedNativeAd.OnUnifiedNativeAdLoadedListener() {
                     @Override
                     public void onUnifiedNativeAdLoaded(UnifiedNativeAd unifiedNativeAd) {
@@ -498,14 +570,16 @@ public class UserProfileActivity extends AppCompatActivity {
                     public void onAdLoaded() {
                         super.onAdLoaded();
                         if(isDestroyed()){
-                            nativeAdView.destroy();
+                            if(nativeAdView != null) nativeAdView.destroy();
                         }
                     }
 
                     @Override
                     public void onAdFailedToLoad(int i) {
                         super.onAdFailedToLoad(i);
-                        // Reload ad
+                        if(isNetworkConnected(UserProfileActivity.this))
+                            adLoader.loadAd(new AdRequest.Builder().build());
+
                     }
                 })
                 .build();
@@ -526,7 +600,7 @@ public class UserProfileActivity extends AppCompatActivity {
             @Override
             public void onAdFailedToLoad(int i) {
                 super.onAdFailedToLoad(i);
-                mInterstitialAd.loadAd(new AdRequest.Builder().build());
+                if(isNetworkConnected(UserProfileActivity.this)) mInterstitialAd.loadAd(new AdRequest.Builder().build());
             }
         });
 
@@ -611,16 +685,16 @@ public class UserProfileActivity extends AppCompatActivity {
             // move to the previous useritem in the list
             if(currentUserIndex > 0) {
                 --currentUserIndex;
-                currentUserItem = userItemArrayList.get(currentUserIndex);
+                currentItem = userItemArrayList.get(currentUserIndex);
 
                 constraintLayout.animate().alpha(0f).setDuration(1000).setListener(new AnimatorListenerAdapter() {
                     @Override
                     public void onAnimationEnd(Animator animation) {
                         super.onAnimationEnd(animation);
-                        constraintLayout.animate().alpha(1).setDuration(1500).setStartDelay(ANIM_START_DELAY).setListener(new Animator.AnimatorListener() {
+                        constraintLayout.animate().alpha(1).setDuration(1000).setStartDelay(ANIM_START_DELAY).setListener(new Animator.AnimatorListener() {
                             @Override
                             public void onAnimationStart(Animator animation) {
-                                loadDataIntoViews(currentUserItem);
+                                loadDataIntoViews(currentItem);
                             }
 
                             @Override
@@ -651,34 +725,42 @@ public class UserProfileActivity extends AppCompatActivity {
             if(currentUserIndex < userItemArrayList.size()-1) {
                 // move to the next item in the list, if there is any
                 ++currentUserIndex;
-                currentUserItem = userItemArrayList.get(currentUserIndex);
-                constraintLayout.animate().alpha(0f).setDuration(1000).setListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        super.onAnimationEnd(animation);
-                        constraintLayout.animate().alpha(1).setDuration(1500).setStartDelay(ANIM_START_DELAY).setListener(new Animator.AnimatorListener() {
-                            @Override
-                            public void onAnimationStart(Animator animation) {
-                                loadDataIntoViews(currentUserItem);
-                            }
+                currentItem = userItemArrayList.get(currentUserIndex);
 
-                            @Override
-                            public void onAnimationEnd(Animator animation) {
+                if(!currentItem.isSuspendedUser) {
 
-                            }
+                    constraintLayout.animate().alpha(0f).setDuration(1000).setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            super.onAnimationEnd(animation);
+                            constraintLayout.animate().alpha(1).setDuration(1000).setStartDelay(ANIM_START_DELAY).setListener(new Animator.AnimatorListener() {
+                                @Override
+                                public void onAnimationStart(Animator animation) {
+                                    loadDataIntoViews(currentItem);
+                                }
 
-                            @Override
-                            public void onAnimationCancel(Animator animation) {
+                                @Override
+                                public void onAnimationEnd(Animator animation) {
 
-                            }
+                                }
 
-                            @Override
-                            public void onAnimationRepeat(Animator animation) {
+                                @Override
+                                public void onAnimationCancel(Animator animation) {
 
-                            }
-                        });
-                    }
-                });
+                                }
+
+                                @Override
+                                public void onAnimationRepeat(Animator animation) {
+
+                                }
+                            });
+                        }
+                    });
+
+                }else{
+                    --currentUserIndex;
+                    Toast.makeText(this, getString(R.string.end_reached), Toast.LENGTH_SHORT).show();
+                }
 
             }else {
                 // we have gotten to the end of the list, can't go any further
@@ -692,7 +774,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if(mInterstitialAd.isLoaded()){
+        if(MainActivity.isShowingAds && mInterstitialAd.isLoaded()){
             mInterstitialAd.show();
         }else{
             super.onBackPressed();
@@ -707,5 +789,115 @@ public class UserProfileActivity extends AppCompatActivity {
             saveImage(bitmap,imageTitle,imageDescription);
         }
 
+    }
+
+    private class MyPopMenuItemClickListener implements PopupMenu.OnMenuItemClickListener {
+
+
+        @Override
+        public boolean onMenuItemClick(MenuItem item) {
+            String title = item.getTitle().toString();
+
+            if(title.equals(getString(R.string.add_to_whitelist))){
+                // Add tow whitelist
+                progressBar.setVisibility(View.VISIBLE);
+                addCurrentItemToWhitelist();
+
+            }else if(title.equals(getString(R.string.remove_from_whitelist))){
+                // Remove current user from whitelist
+                progressBar.setVisibility(View.VISIBLE);
+                removeCurrentItemFromWhiteList();
+
+            }else if(title.equals(getString(R.string.view_followers))){
+                // view user's followers
+                viewUserFollowers();
+
+            }else if(title.equals(getString(R.string.view_following))){
+                // view user's following
+                viewUserFollowing();
+
+            }else if(title.equals(getString(R.string.request_follow_back))){
+                // Ask the user to follow back
+                showRequestFollowBackBottomSheetDialog(UserProfileActivity.this,currentItem.screenName, dialog,twitterApiClient,progressBar);
+            }else if(title.equals(getString(R.string.just_view_on_twitter))){
+                //view profile on twitter
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://twitter.com/"+ currentItem.screenName));
+                    startActivity(intent);
+                }catch (Exception e){
+                    e.printStackTrace();
+                    if( BuildConfig.DEBUG){
+                        Toast.makeText(UserProfileActivity.this,e.getMessage(),Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+            }
+            return true;
+        }
+
+    }
+
+    private void removeCurrentItemFromWhiteList() {
+
+        databaseReference = FirebaseUtil.openDbReference("whitelist/" + twitterSession.getUserId()+"/"+currentItem.id);
+
+        databaseReference.removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+
+                if(task.isSuccessful()){
+                    ++MainActivity.keyActionsCount;
+                    Toast.makeText(UserProfileActivity.this,currentItem.screenName+" removed successfully",Toast.LENGTH_SHORT).show();
+
+                    if(MainActivity.remindUserToRateApp){
+                        checkWhetherToAskUserToRateApp(UserProfileActivity.this);
+                    }
+                    whitelistStatusTv.setVisibility(View.GONE);
+
+                }else{
+                    progressBar.setVisibility(View.GONE);
+                    Toast.makeText(UserProfileActivity.this,task.getException().getMessage(),Toast.LENGTH_SHORT).show();
+                }
+                progressBar.setVisibility(View.GONE);
+            }
+        });
+    }
+
+    private void addCurrentItemToWhitelist() {
+        Long signedInUserId = twitterSession.getUserId();
+        final Long whitelistedUserId = currentItem.id;
+        databaseReference = FirebaseUtil.openDbReference("whitelist/"+signedInUserId+"/"+whitelistedUserId);
+        databaseReference.setValue(currentItem.screenName).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+
+                if(task.isSuccessful()){
+                    MainActivity.nonFollowersIdsList.remove(whitelistedUserId);
+                    Toast.makeText(UserProfileActivity.this,currentItem.screenName+" added to whitelist",Toast.LENGTH_SHORT).show();
+                    ++MainActivity.keyActionsCount;
+
+                    if(MainActivity.remindUserToRateApp){
+                        checkWhetherToAskUserToRateApp(UserProfileActivity.this);
+                    }
+
+                    whitelistStatusTv.setVisibility(View.VISIBLE);
+                }else{
+                    Toast.makeText(UserProfileActivity.this,task.getException().getMessage(),Toast.LENGTH_SHORT).show();
+                }
+
+                progressBar.setVisibility(View.GONE);
+
+            }
+        });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if(MainActivity.isShowingAds && !mInterstitialAd.isLoaded()){
+            if(isNetworkConnected(this)){
+                mInterstitialAd.loadAd(new AdRequest.Builder().build());
+            }
+        }
     }
 }

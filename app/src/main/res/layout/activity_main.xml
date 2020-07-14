@@ -1,15 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorPrimary"
-    android:paddingTop="18dp"
-    android:paddingBottom="10dp"
-    android:paddingStart="22dp"
-    android:paddingEnd="22dp"
     tools:context=".MainActivity">
+
+    <androidx.appcompat.widget.Toolbar
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:id="@+id/toolbar"
+        app:layout_constraintTop_toTopOf="parent"
+        android:background="@color/colorPrimary"
+        app:popupTheme="@style/Theme.AppCompat.Light"
+        android:elevation="4dp"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="18dp"
+        android:paddingBottom="10dp"
+        android:paddingStart="22dp"
+        android:paddingEnd="22dp"
+        android:layout_below="@id/toolbar">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -40,7 +55,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:backgroundTint="@android:color/white"
-                    android:paddingLeft="20dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
                     android:paddingTop="10dp"
                     android:paddingBottom="10dp"
                     android:text="@string/new_followers_btn_default_text"
@@ -51,14 +67,16 @@
                     app:icon="@drawable/ic_chevron_right_black_24dp"
                     app:iconPadding="10dp"
                     app:iconSize="20dp"
-                    app:iconTint="#E82E57" />
+                    android:textColor="@color/very_dark_222"
+                    app:iconTint="@color/colorAccent" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/new_unfollowers_btn"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:backgroundTint="@android:color/white"
-                    android:paddingLeft="20dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
                     android:paddingTop="10dp"
                     android:paddingBottom="10dp"
                     android:text="@string/new_unfollowers_btn_default_text"
@@ -68,15 +86,17 @@
                     app:cornerRadius="20dp"
                     app:icon="@drawable/ic_chevron_right_black_24dp"
                     app:iconPadding="10dp"
+                    android:textColor="@color/very_dark_222"
                     app:iconSize="20dp"
-                    app:iconTint="#E82E57" />
+                    app:iconTint="@color/colorAccent" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/non_followers_btn"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:backgroundTint="@android:color/white"
-                    android:paddingLeft="20dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
                     android:paddingTop="10dp"
                     android:paddingBottom="10dp"
                     android:text="@string/non_followers_btn_default_text"
@@ -86,15 +106,17 @@
                     app:cornerRadius="20dp"
                     app:icon="@drawable/ic_chevron_right_black_24dp"
                     app:iconPadding="10dp"
+                    android:textColor="@color/very_dark_222"
                     app:iconSize="20dp"
-                    app:iconTint="#E82E57" />
+                    app:iconTint="@color/colorAccent" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/fans_btn"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:backgroundTint="@android:color/white"
-                    android:paddingLeft="20dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
                     android:paddingTop="10dp"
                     android:paddingBottom="10dp"
                     android:text="@string/fans_btn_default_text"
@@ -105,14 +127,16 @@
                     app:icon="@drawable/ic_chevron_right_black_24dp"
                     app:iconPadding="10dp"
                     app:iconSize="20dp"
-                    app:iconTint="#E82E57" />
+                    android:textColor="@color/very_dark_222"
+                    app:iconTint="@color/colorAccent" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/mutual_followers_btn"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:backgroundTint="@android:color/white"
-                    android:paddingLeft="20dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
                     android:paddingTop="10dp"
                     android:paddingBottom="10dp"
                     android:text="@string/mutual_followers_btn_default_text"
@@ -122,15 +146,17 @@
                     app:cornerRadius="20dp"
                     app:icon="@drawable/ic_chevron_right_black_24dp"
                     app:iconPadding="10dp"
+                    android:textColor="@color/very_dark_222"
                     app:iconSize="20dp"
-                    app:iconTint="#E82E57" />
+                    app:iconTint="@color/colorAccent" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/whitelisted_users_btn"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:backgroundTint="@android:color/white"
-                    android:paddingLeft="20dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
                     android:paddingTop="10dp"
                     android:paddingBottom="10dp"
                     android:text="@string/whitelisted_users_btn_default_text"
@@ -139,16 +165,18 @@
                     android:textSize="16sp"
                     app:cornerRadius="20dp"
                     app:icon="@drawable/ic_chevron_right_black_24dp"
+                    android:textColor="@color/very_dark_222"
                     app:iconPadding="10dp"
                     app:iconSize="20dp"
-                    app:iconTint="#E82E57" />
+                    app:iconTint="@color/colorAccent" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/search_users_btn"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:backgroundTint="@android:color/white"
-                    android:paddingLeft="20dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
                     android:paddingTop="10dp"
                     android:paddingBottom="10dp"
                     android:text="@string/search_users_btn_text"
@@ -157,9 +185,10 @@
                     android:textSize="16sp"
                     app:cornerRadius="20dp"
                     app:icon="@drawable/ic_chevron_right_black_24dp"
+                    android:textColor="@color/very_dark_222"
                     app:iconPadding="10dp"
                     app:iconSize="20dp"
-                    app:iconTint="#E82E57" />
+                    app:iconTint="@color/colorAccent" />
 
             </LinearLayout>
 
@@ -289,4 +318,6 @@
 
     </ScrollView>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</RelativeLayout>

@@ -2,15 +2,21 @@ package com.gananidevs.followersmanager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 
 import android.app.Dialog;
+import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.StrictMode;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -18,21 +24,17 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.webkit.CookieManager;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.google.android.gms.ads.MobileAds;
-import com.google.android.gms.common.util.ProcessUtils;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
@@ -57,18 +59,18 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.concurrent.ThreadFactory;
+import java.util.Random;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
+
+    public static boolean isShowingAds, adsRemovalActive;
     TextView nameTv, screenNameTv, followingCountTv, followersCountTv;
     ImageView profileImage;
-    ProgressBar progressBar;
     Button newFollowersBtn, newUnfollowersBtn, nonFollowersBtn, fansBtn, mutualFollowersBtn, whitelistedUsersBtn, searchUsersBtn;
 
     public static ArrayList<Long> followersIdsList, friendsIdsList, nonFollowersIdsList, mutualFriendsIdsList, fansIdsList, whitelistedIdsList, lastSavedFollowersIdsList, newFollowersIdsList, newUnfollowersIdsList;
@@ -78,13 +80,21 @@ public class MainActivity extends AppCompatActivity {
     Boolean isLoading = true, hasFinishedBackgroundTask = false, waitingForBackgroundTask = false;
     private UserItem user;
 
+
     // REQUESTS LIMIT
-    public static int apiRequestCount;
+    public static int apiRequestCount, keyActionsCount = 0;
+
+    public static boolean remindUserToRateApp = true;
+
     public static SharedPreferences sp;
-    public static long last15MinTimeStamp;
+    public static long last15MinTimeStamp, lastTimeAskedUserToRateApp;
     String followersIdsFileName;
-    private File followersIdsFile;
+    private static File followersIdsFile;
     Dialog loadingDialog;
+
+    DrawerLayout drawerLayout;
+    NavigationView navigationView;
+    androidx.appcompat.widget.Toolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,22 +102,19 @@ public class MainActivity extends AppCompatActivity {
 
         MobileAds.initialize(this);
 
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.navigation_drawer);
+
+        // load shardPrefs manager
+        sp = PreferenceManager.getDefaultSharedPreferences(this);
 
         if(BuildConfig.DEBUG) {
-            //StrictMode.ThreadPolicy threadPolicy = new StrictMode.ThreadPolicy.Builder().detectNetwork().detectDiskReads().detectDiskWrites().penaltyLog().penaltyDialog().build();
-            //StrictMode.setThreadPolicy(threadPolicy);
+            StrictMode.ThreadPolicy threadPolicy = new StrictMode.ThreadPolicy.Builder().detectNetwork().detectDiskReads().detectDiskWrites().penaltyLog().penaltyFlashScreen().build();
+            StrictMode.setThreadPolicy(threadPolicy);
+            StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().detectActivityLeaks().detectLeakedClosableObjects().penaltyLog().build());
         }
 
-        // load shardPrefs
-        Thread t = new Thread(){
-            @Override
-            public void run() {
-                loadSharedPrefs();
-            }
-        };
-        t.setPriority(4);
-        t.start();
+        // load settings (preferences) using AsyncTask
+        new LoadSettingsTask().execute();
 
         // Get active twitter session
         activeSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
@@ -131,18 +138,44 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void loadSharedPrefs() {
-        sp = PreferenceManager.getDefaultSharedPreferences(this);
+    private static void loadSharedPrefs() {
+        remindUserToRateApp = sp.getBoolean(REMIND_USER_TO_RATE_APP,true);
         apiRequestCount = sp.getInt(REQUEST_COUNT_KEY,0);
         last15MinTimeStamp = sp.getLong(LAST_TIMESTAMP_KEY,0);
+        lastTimeAskedUserToRateApp = sp.getLong(LAST_RATE_APP_ASK_TIMESTAMP,0);
+        adsRemovalActive = sp.getBoolean(ADS_REMOVAL_ACTIVE,false);
+
+        if(adsRemovalActive){
+            // check if it has expired
+            long adsRemovalExpiryDate = sp.getLong(ADS_REMOVAL_EXPIRY_DATE,System.currentTimeMillis());
+            if(System.currentTimeMillis() > adsRemovalExpiryDate){
+                // The ads removal has expired, so the user will continue to see Ads
+                adsRemovalActive = false;
+                sp.edit().putBoolean(ADS_REMOVAL_ACTIVE, adsRemovalActive).apply();
+                isShowingAds = true;
+            }
+
+        }
     }
 
     private void setUpUI(final TwitterSession activeSession) {
+        toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        drawerLayout = findViewById(R.id.drawer_layout);
+        navigationView = findViewById(R.id.navigation_view);
+        navigationView.setNavigationItemSelectedListener(this);
+
+        ActionBarDrawerToggle actionBarDrawerToggle = new ActionBarDrawerToggle(this,drawerLayout,toolbar,R.string.open_drawer,R.string.close_drawer);
+        drawerLayout.addDrawerListener(actionBarDrawerToggle);
+        actionBarDrawerToggle.syncState();
 
         loadingDialog = new Dialog(this);
         loadingDialog.setContentView(R.layout.loading_dialog_view);
         loadingDialog.setCancelable(false);
+
         loadingDialog.show();
+
 
         nameTv = findViewById(R.id.name_tv);
         screenNameTv = findViewById(R.id.screen_name_tv);
@@ -272,6 +305,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadDataIntoUI(UserItem user) {
+        TextView navHeaderTv = findViewById(R.id.nav_header_username_tv);
+        navHeaderTv.setText("@"+user.screenName);
+
         nameTv.setText(user.name);
         screenNameTv.setText(user.screenName);
         followingCountTv.setText(Helper.insertCommas(user.friendsCount));
@@ -468,7 +504,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    class SaveFollowersIdsTask extends AsyncTask<Void,Void,Void>{
+    static class SaveFollowersIdsTask extends AsyncTask<Void,Void,Void>{
         @Override
         protected Void doInBackground(Void... voids) {
             saveFollowersIdsToFile();
@@ -476,7 +512,22 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void saveFollowersIdsToFile() {
+    static class LoadSettingsTask extends AsyncTask<Void,Void,Void>{
+        @Override
+        protected Void doInBackground(Void... voids) {
+            loadSharedPrefs();
+            if(BuildConfig.DEBUG){
+                if(isShowingAds) {
+                    sp.edit().putBoolean(ADS_REMOVAL_ACTIVE, true).apply();
+                    sp.edit().putLong(ADS_REMOVAL_EXPIRY_DATE, System.currentTimeMillis() + FIFTEEN_MINUTES * 3).apply();
+                    isShowingAds = false;
+                }
+            }
+            return null;
+        }
+    }
+
+    private static void saveFollowersIdsToFile() {
 
         try {
 
@@ -484,13 +535,13 @@ public class MainActivity extends AppCompatActivity {
                 followersIdsFile.createNewFile();
             }
 
-            FileOutputStream fos = new FileOutputStream(followersIdsFile);
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            FileOutputStream fileOutputStream = new FileOutputStream(followersIdsFile);
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
 
-            oos.writeObject(followersIdsList);
+            objectOutputStream.writeObject(followersIdsList);
 
-            fos.close();
-            oos.close();
+            fileOutputStream.close();
+            objectOutputStream.close();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -665,6 +716,9 @@ public class MainActivity extends AppCompatActivity {
                     startActivity(intent);
                     break;
                 case R.id.new_unfollowers_btn:
+                    /*newUnfollowersIdsList.add(93346325870731056L);
+                    newUnfollowersIdsList.add(749137505340833284L);
+                    newUnfollowersIdsList.add(749137505340833284L);*/
                     if(newUnfollowersIdsList.size() > 0) {
                         intent = new Intent(MainActivity.this, UsersListActivity.class);
                         intent.putExtra(LIST_NAME, NEW_UNFOLLOWERS);
@@ -700,8 +754,10 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.action_refresh){
             if(!isLoading) {
-                //getWhitelistedIds();
-                loadTwitterData(activeSession.getUserId());
+                if(isNetworkConnected(this))
+                    loadTwitterData(activeSession.getUserId());
+                else
+                    Toast.makeText(this,"No network connectivity.",Toast.LENGTH_LONG).show();
             }else{
                 Toast.makeText(this,this.getString(R.string.still_loading),Toast.LENGTH_SHORT).show();
             }
@@ -717,25 +773,122 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        new AlertDialog.Builder(this)
-                .setMessage("Sign out before exit?")
-                .setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
 
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        CookieManager.getInstance().removeAllCookies(null);
-                        CookieManager.getInstance().flush();
-                        FirebaseAuth.getInstance().signOut();
-                        TwitterCore.getInstance().getSessionManager().clearActiveSession();
-                        finish();
-                    }
-                }).setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
+        final Dialog confirmDialog = new Dialog(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.confirm_dialog_layout,null,false);
+        TextView confirmMessage = dialogView.findViewById(R.id.message_tv);
+        confirmMessage.setText(R.string.exit_confirm_dialog_msg);
+        Button positiveBtn = dialogView.findViewById(R.id.positive_btn);
+        positiveBtn.setText(R.string.yes);
+        positiveBtn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(DialogInterface dialog, int which) {
+            public void onClick(View v) {
+                confirmDialog.dismiss();
                 finish();
             }
-        }).show();
+        });
 
+        Button negativeBtn = dialogView.findViewById(R.id.negative_btn);
+        negativeBtn.setText(R.string.no);
+        negativeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                confirmDialog.dismiss();
+            }
+        });
+        confirmDialog.setContentView(dialogView);
+        confirmDialog.show();
+
+        /*
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
+            .setMessage(getString(R.string.exit_confirm_dialog_msg))
+            .setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
+
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    finish();
+                }
+            }).setNegativeButton(getString(R.string.no), null);
+
+        builder.create().show();
+
+         */
+    }
+
+    @Override
+    protected void onResume() {
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+        }
+        super.onResume();
+    }
+
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+        int itemId = menuItem.getItemId();
+
+        switch(itemId){
+            case R.id.action_log_out:{
+                logout();
+                return true;
+            }
+            case R.id.action_remove_ads:{
+                startActivity(new Intent(this,RemoveAdsActivity.class));
+                return true;
+            }
+            case R.id.action_share_app:{
+                shareApp();
+                return true;
+            }
+            case R.id.action_rate_app:{
+                goToAppStore();
+                return true;
+            }
+            default:
+                return false;
+        }
 
     }
+
+    private void shareApp() {
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_SUBJECT, R.string.app_share_intent_subject);
+        shareIntent.putExtra(Intent.EXTRA_TEXT,"https://play.google.com/store/apps/details?id="+getPackageName());
+        startActivity(Intent.createChooser(shareIntent, "Share via"));
+        drawerLayout.closeDrawer(GravityCompat.START);
+    }
+
+    private void logout() {
+        // Sign out the user and start login activity
+        if(activeSession != null) {
+            CookieManager.getInstance().removeAllCookies(null);
+            CookieManager.getInstance().flush();
+            TwitterCore.getInstance().getSessionManager().clearActiveSession();
+
+            FirebaseAuth.getInstance().signOut();
+            startActivity(new Intent(this, WelcomeScreenActivity.class));
+            finish();
+
+        }else{
+            Toast.makeText(MainActivity.this,R.string.still_loading,Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void goToAppStore() {
+        Uri uri = Uri.parse("market://details?id=" + getPackageName());
+        Intent goToAppListing = new Intent(Intent.ACTION_VIEW, uri);
+
+        // After pressing back button,to be taken back to our application, we need to add following flags to intent.
+        goToAppListing.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
+                Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
+                Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+        try {
+            startActivity(goToAppListing);
+        } catch (ActivityNotFoundException e) {
+            startActivity(new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("http://play.google.com/store/apps/details?id=" + getPackageName())));
+        }
+    }
+
 }

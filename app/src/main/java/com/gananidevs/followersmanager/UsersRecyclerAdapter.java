@@ -1,5 +1,6 @@
 package com.gananidevs.followersmanager;
 
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -29,6 +30,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
+import com.twitter.sdk.android.core.TwitterApiClient;
 import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
@@ -40,10 +42,9 @@ import okhttp3.ResponseBody;
 
 import static com.gananidevs.followersmanager.Helper.CURRENT_USER_INDEX;
 import static com.gananidevs.followersmanager.Helper.DATABASE_URL;
-import static com.gananidevs.followersmanager.Helper.REQUEST_COUNT_KEY;
 import static com.gananidevs.followersmanager.Helper.USERS_PARCELABLE_ARRAYLIST;
-import static com.gananidevs.followersmanager.Helper.USER_PARCELABLE;
 import static com.gananidevs.followersmanager.Helper.changeButtonTextAndColor;
+import static com.gananidevs.followersmanager.Helper.checkWhetherToAskUserToRateApp;
 import static com.gananidevs.followersmanager.Helper.getMinutesLeft;
 import static com.gananidevs.followersmanager.Helper.incrementApiRequestCount;
 import static com.gananidevs.followersmanager.Helper.proceedWithApiCall;
@@ -57,7 +58,7 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
     boolean isApiRequestActive = false;
     public boolean isViewingWhitelist = false, showDropdown = false;
     private final TwitterSession activeSession;
-    private final MyTwitterApiClient twitterApiClient;
+    MyTwitterApiClient twitterApiClient;
     private BottomSheetDialog bottomSheetDialog;
 
     public UsersRecyclerAdapter(Context context,ArrayList<UserItem> userItems) {
@@ -105,7 +106,6 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
             Helper.changeButtonTextAndColor(context,holder.followStatusButton,R.string.doesnt_follow_you,R.color.mid_gray_777);
         }
 
-        // check if you are following the user or not for follow or unfollow button and adjust the text and background colour accordingly
         if (!isViewingWhitelist) {
             setFollowBtnAppearance(context, userItem.id, holder.followUnfollowButton);
         }
@@ -115,14 +115,33 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
             holder.followUnfollowButton.setVisibility(View.GONE);
         }
 
-        try{
-            Glide.with(context).load(userItem.profileImageUrlHttps).into(holder.profileImage);
-        }catch (Exception e){
-            e.printStackTrace();
-        }
         holder.nameTv.setText(userItem.name);
-        String screenName = "@"+userItem.screenName;
-        holder.screenNameTv.setText(screenName);
+
+        if(userItem.isSuspendedUser){
+            Glide.with(context).load(R.drawable.suspended_user).into(holder.profileImage);
+            holder.profileImage.setClickable(false);
+            holder.followUnfollowButton.setVisibility(View.GONE);
+            holder.followStatusButton.setVisibility(View.INVISIBLE);
+            holder.dropDownArrow.setVisibility(View.GONE);
+            holder.screenNameTv.setText(R.string.suspended_user);
+            holder.screenNameTv.setTextColor(context.getColor(R.color.colorAccent));
+        }else {
+            try {
+                Glide.with(context).load(userItem.profileImageUrlHttps).into(holder.profileImage);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            String screenName = "@" + userItem.screenName;
+            holder.screenNameTv.setText(screenName);
+        }
+
+        if(Helper.isWhielisted(userItem.id)){
+            holder.whitelistStatusTv.setVisibility(View.VISIBLE);
+        }else{
+            holder.whitelistStatusTv.setVisibility(View.GONE);
+        }
+
 
     }
 
@@ -136,7 +155,7 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
         public final ImageView profileImage, verifiedIcon, dropDownArrow;
         public final MaterialButton followUnfollowButton, followStatusButton;
         public final TextView nameTv;
-        public final TextView screenNameTv;
+        public final TextView screenNameTv, whitelistStatusTv;
         public final ProgressBar btnProgressBar;
 
         public UsersViewHolder(@NonNull View itemView) {
@@ -149,6 +168,7 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
             verifiedIcon = itemView.findViewById(R.id.verified_icon);
             btnProgressBar = itemView.findViewById(R.id.btn_progress_bar);
             dropDownArrow = itemView.findViewById(R.id.dropDownArrow);
+            whitelistStatusTv = itemView.findViewById(R.id.whitelisted_status_tv);
 
             ClickListener listener = new ClickListener();
 
@@ -157,6 +177,15 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
             profileImage.setOnClickListener(listener);
             followUnfollowButton.setOnClickListener(listener);
             dropDownArrow.setOnClickListener(listener);
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(!userItemsList.get(getAdapterPosition()).isSuspendedUser) {
+                        viewProfile(context, getAdapterPosition());
+                    }
+                }
+            });
 
         }
 
@@ -171,7 +200,9 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
                 final String userScreenName = currentUserItem.screenName;
 
                 if(viewId == nameTv.getId() || viewId == screenNameTv.getId() || viewId == profileImage.getId()){
-                    viewProfile(context,getAdapterPosition());
+                    if(!currentUserItem.isSuspendedUser){
+                        viewProfile(context,getAdapterPosition());
+                    }
 
                 }else if(viewId == followUnfollowButton.getId()){
 
@@ -208,6 +239,41 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
                             } else if (btnText.equals(context.getString(R.string.unfollow_all_lowercase))) {
 
                                 // unfollow the specified user
+                                final Dialog confirmDialog = new Dialog(context);
+                                View dialogView = LayoutInflater.from(context).inflate(R.layout.confirm_dialog_layout,null,false);
+                                TextView confirmMessage = dialogView.findViewById(R.id.message_tv);
+                                confirmMessage.setText("you want to unfollow "+userScreenName+"?");
+                                Button positiveBtn = dialogView.findViewById(R.id.positive_btn);
+                                positiveBtn.setText(R.string.yes);
+                                positiveBtn.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        confirmDialog.dismiss();
+                                        isApiRequestActive = true;
+                                        showProgressHideButtonText(btnProgressBar, followUnfollowButton, context);
+
+                                        int delay = new Random().nextInt(1000) + 1500;
+                                        new Handler().postDelayed(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                unfollowUser(userId);
+                                            }
+                                        }, delay);
+                                    }
+                                });
+
+                                Button negativeBtn = dialogView.findViewById(R.id.negative_btn);
+                                negativeBtn.setText(R.string.cancel);
+                                negativeBtn.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        confirmDialog.dismiss();
+                                    }
+                                });
+                                confirmDialog.setContentView(dialogView);
+                                confirmDialog.show();
+
+                                /*
                                 new AlertDialog.Builder(context).setTitle("confirm action")
                                     .setMessage(context.getString(R.string.unfollow_all_lowercase) + " " + userScreenName + "?")
                                     .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
@@ -227,6 +293,8 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
                                         }
                                     }).setNegativeButton(context.getString(R.string.cancel), null)
                                     .show();
+
+                                 */
                             }
 
                         } else { // request limit has been reached, so show appropriate message
@@ -242,8 +310,8 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
                     } // api request is currently active endif
 
                 }else if(viewId == dropDownArrow.getId()){ // if dropdown arrow was clicked
-                    final String REQUEST_FOLLOW_BACK = context.getString(R.string.Request_follow_back);
-                    final String ADD_TO_WHITELIST = context.getString(R.string.Add_to_whitelist);
+                    final String REQUEST_FOLLOW_BACK = context.getString(R.string.request_follow_back);
+                    final String ADD_TO_WHITELIST = context.getString(R.string.add_to_whitelist);
                     PopupMenu popupMenu = new PopupMenu(context,v);
                     popupMenu.getMenu().add(REQUEST_FOLLOW_BACK);
                     popupMenu.getMenu().add(ADD_TO_WHITELIST);
@@ -258,8 +326,7 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
                                 whitelistUser(activeSession.getUserId(),String.valueOf(currentUserItem.id),currentUserItem.screenName);
 
                             }else if(item.getTitle() == REQUEST_FOLLOW_BACK){
-                                showRequestFollowBackBottomSheetDialog(currentUserItem.screenName);
-
+                                Helper.showRequestFollowBackBottomSheetDialog(context,currentUserItem.screenName,bottomSheetDialog,twitterApiClient,UsersListActivity.progressBar);
                             }
                         return true;
                         }
@@ -279,7 +346,8 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
                         changeButtonTextAndColor(context,followUnfollowButton,R.string.unfollow_all_lowercase,R.color.colorAccent);
                         MainActivity.friendsIdsList.add(userId);
                         isApiRequestActive = false;
-                        incrementApiRequestCount();
+                        incrementApiRequestCount(context);
+
                     }
 
                     @Override
@@ -301,7 +369,7 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
                         changeButtonTextAndColor(context,followUnfollowButton,R.string.follow_all_lowercase,R.color.colorPrimary);
                         MainActivity.friendsIdsList.remove(userId);
                         isApiRequestActive = false;
-                        incrementApiRequestCount();
+                        incrementApiRequestCount(context);
                     }
 
                     @Override
@@ -313,6 +381,7 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
                 });
             }
         }
+
 
         private void showDialogAndFeignWork(String screenName) {
             // unfollow the specified user
@@ -336,7 +405,7 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
                 @Override
                 public void run() {
                     int minutesLeft = getMinutesLeft(MainActivity.last15MinTimeStamp);
-                    showSnackBar(UsersListActivity.recyclerView, minutesLeft);
+                    showSnackBar(UsersListActivity.constraintLayout, minutesLeft);
                     hideProgressShowButtonText(btnProgressBar, followUnfollowButton, context);
                 }
             }, delay);
@@ -355,7 +424,13 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
                     if(task.isSuccessful()){
                         hideProgressShowButtonText(btnProgressBar,followUnfollowButton,context);
                         removeCurrentItem();
+                        ++MainActivity.keyActionsCount;
                         Toast.makeText(context,screenName+" removed successfully",Toast.LENGTH_SHORT).show();
+
+                        if(MainActivity.remindUserToRateApp){
+                            checkWhetherToAskUserToRateApp(context);
+                        }
+
                     }else{
                         hideProgressShowButtonText(btnProgressBar,followUnfollowButton,context);
                         Toast.makeText(context,task.getException().getMessage(),Toast.LENGTH_SHORT).show();
@@ -367,7 +442,7 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
 
         private void whitelistUser(Long signedInUserId, final String whitelistedUserId, final String whitelistedUserName) {
 
-            DatabaseReference fbDbRef = FirebaseDatabase.getInstance(DATABASE_URL).getReference("whitelist/"+signedInUserId+"/"+whitelistedUserId);
+            DatabaseReference fbDbRef = FirebaseUtil.openDbReference("whitelist/"+signedInUserId+"/"+whitelistedUserId);
 
             fbDbRef.setValue(whitelistedUserName).addOnCompleteListener(new OnCompleteListener<Void>() {
                 @Override
@@ -377,6 +452,11 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
                         removeCurrentItem();
                         MainActivity.nonFollowersIdsList.remove(Long.valueOf(whitelistedUserId));
                         Toast.makeText(context,whitelistedUserName+" added to whitelist",Toast.LENGTH_SHORT).show();
+                        ++MainActivity.keyActionsCount;
+                        if(MainActivity.remindUserToRateApp){
+                            checkWhetherToAskUserToRateApp(context);
+                        }
+
                     }else{
                         Toast.makeText(context,task.getException().getMessage(),Toast.LENGTH_SHORT).show();
                         hideProgressShowButtonText(btnProgressBar,followUnfollowButton,context);
@@ -399,67 +479,6 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
             notifyItemRemoved(currentPos);
         }
 
-
-    }
-
-    private void showRequestFollowBackBottomSheetDialog(final String userScreenName) {
-        View view = LayoutInflater.from(context).inflate(R.layout.request_followback_dialog,null);
-        RadioGroup radioGroup = view.findViewById(R.id.radio_group);
-        MaterialButton sendButton = view.findViewById(R.id.send_button);
-
-        final TextView tweetTextTv = view.findViewById(R.id.request_tweet_tv);
-        String requestTweet = "@"+userScreenName+" "+context.getString(R.string.kindly_follow_back);
-        tweetTextTv.setText(requestTweet);
-
-        radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-            String requestTweet = "@"+userScreenName+" ";
-            if(checkedId == R.id.pls_follow_back_radio){
-
-                requestTweet += context.getString(R.string.please_follow_back);
-
-            }else if(checkedId == R.id.kindly_follow_back_radio){
-                requestTweet += context.getString(R.string.kindly_follow_back);
-            }
-            tweetTextTv.setText(requestTweet);
-            }
-
-        });
-
-        sendButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                UsersListActivity.progressBar.setVisibility(View.VISIBLE);
-                sendTweet(tweetTextTv.getText().toString());
-                bottomSheetDialog.dismiss();
-            }
-        });
-
-        bottomSheetDialog = new BottomSheetDialog(context);
-        bottomSheetDialog.setCancelable(true);
-        bottomSheetDialog.setCanceledOnTouchOutside(true);
-        bottomSheetDialog.setContentView(view);
-        bottomSheetDialog.show();
-    }
-
-    private void sendTweet(String tweet) {
-
-        twitterApiClient.getStatusUpdateCustomService().post(tweet, 1).enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void success(Result<ResponseBody> result) {
-                Toast.makeText(context, "follow back request sent successfully", Toast.LENGTH_SHORT).show();
-                UsersListActivity.progressBar.setVisibility(View.GONE);
-            }
-
-            @Override
-            public void failure(TwitterException exception) {
-                UsersListActivity.progressBar.setVisibility(View.GONE);
-                Toast.makeText(context, exception.getMessage(), Toast.LENGTH_SHORT).show();
-                exception.printStackTrace();
-            }
-
-        });
 
     }
 

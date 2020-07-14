@@ -4,7 +4,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -41,6 +43,9 @@ public class WelcomeScreenActivity extends AppCompatActivity {
     private boolean isSignedIn = false;
     ProgressBar progressBar;
 
+    int currentAppVersionCode = 2313100; // Remember to update or increment this whenever you update your app.
+    int latestAppVersionCode;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,31 +80,32 @@ public class WelcomeScreenActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View v) {
+                try {
+                    if(!isSignedIn) {
+                        if(apiKey != null && !apiKey.isEmpty() && apiSecretKey != null && !apiSecretKey.isEmpty()) {
 
-                if(!isSignedIn && !apiKey.isEmpty() && !apiSecretKey.isEmpty()) {
-                    try {
+                            twitterAuthClient = new TwitterAuthClient();
+                            twitterAuthClient.authorize(WelcomeScreenActivity.this, new Callback<TwitterSession>() {
+                                @Override
+                                public void success(Result<TwitterSession> result) {
+                                    Toast.makeText(WelcomeScreenActivity.this, "log in successful", Toast.LENGTH_SHORT).show();
+                                    startActivity(new Intent(WelcomeScreenActivity.this, MainActivity.class));
+                                    finish();
+                                }
 
-                        twitterAuthClient = new TwitterAuthClient();
-                        twitterAuthClient.authorize(WelcomeScreenActivity.this, new Callback<TwitterSession>() {
-                            @Override
-                            public void success(Result<TwitterSession> result) {
-                                Toast.makeText(WelcomeScreenActivity.this, "log in successful", Toast.LENGTH_SHORT).show();
-                                startActivity(new Intent(WelcomeScreenActivity.this, MainActivity.class));
-                                finish();
-
-                            }
-
-                            @Override
-                            public void failure(TwitterException exception) {
-                                Toast.makeText(WelcomeScreenActivity.this, exception.getMessage(), Toast.LENGTH_SHORT).show();
-                                exception.printStackTrace();
-                                twitterAuthClient.cancelAuthorize();
-                            }
-                        });
-                    }catch (IllegalStateException e){
-                        e.printStackTrace();
-                        Toast.makeText(WelcomeScreenActivity.this,e.getMessage(),Toast.LENGTH_LONG).show();
+                                @Override
+                                public void failure(TwitterException exception) {
+                                    Toast.makeText(WelcomeScreenActivity.this, exception.getMessage(), Toast.LENGTH_SHORT).show();
+                                    exception.printStackTrace();
+                                    twitterAuthClient.cancelAuthorize();
+                                }
+                            });
+                        }
                     }
+
+                } catch (IllegalStateException e) {
+                    e.printStackTrace();
+                    Toast.makeText(WelcomeScreenActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
                 }
 
             }
@@ -130,8 +136,20 @@ public class WelcomeScreenActivity extends AppCompatActivity {
     private void initializeTwitter() {
         apiKey = remoteConfig.getString(API_KEY);
         apiSecretKey = remoteConfig.getString(API_SECRET);
+        latestAppVersionCode = (int)remoteConfig.getLong("latest_app_version_code");
 
-        TwitterConfig config = new TwitterConfig.Builder(WelcomeScreenActivity.this)
+        if(latestAppVersionCode > currentAppVersionCode){
+            askUserToUpdateApp();
+        }else {
+            setUpTwitterAndGoToMainActivity();
+        }
+
+        progressBar.setVisibility(View.GONE);
+
+    }
+
+    private void setUpTwitterAndGoToMainActivity() {
+        TwitterConfig config = new TwitterConfig.Builder(this)
                 .logger(new DefaultLogger(Log.DEBUG))
                 .twitterAuthConfig(new TwitterAuthConfig(apiKey, apiSecretKey))
                 .debug(true)
@@ -142,8 +160,19 @@ public class WelcomeScreenActivity extends AppCompatActivity {
             isSignedIn = true;
             goToMainActivity();
         }
-        progressBar.setVisibility(View.GONE);
+    }
 
+    private void askUserToUpdateApp() {
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setMessage("New version available. Please update app to enjoy the latest features")
+                .setPositiveButton("update", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Helper.goToAppStore(WelcomeScreenActivity.this);
+                    }
+                }).setNegativeButton("",null)
+                .setCancelable(false)
+                .show();
     }
 
     @Override
@@ -157,7 +186,6 @@ public class WelcomeScreenActivity extends AppCompatActivity {
     @Override
     public void onStart() {
         super.onStart();
-        //FirebaseUser currentUser = firebaseAuth.getCurrentUser();
     }
 
     private void goToMainActivity() {
@@ -169,6 +197,18 @@ public class WelcomeScreenActivity extends AppCompatActivity {
         startActivity(intent);
         finish();
 
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if(latestAppVersionCode > currentAppVersionCode){
+            askUserToUpdateApp();
+        }else if(apiSecretKey != null && apiKey != null){
+            if(!apiKey.isEmpty() && !apiSecretKey.isEmpty()){
+                setUpTwitterAndGoToMainActivity();
+            }
+        }
     }
 
     @Override

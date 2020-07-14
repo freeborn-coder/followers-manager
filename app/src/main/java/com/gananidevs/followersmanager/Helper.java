@@ -1,12 +1,26 @@
 package com.gananidevs.followersmanager;
 
+import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
+import android.net.ConnectivityManager;
+import android.net.Uri;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.RadioGroup;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.snackbar.Snackbar;
+import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
+import com.twitter.sdk.android.core.TwitterException;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -20,12 +34,20 @@ public class Helper {
     private Helper(){}
 
     public static final int IDS_COUNT_TO_RETRIEVE = 5000;
+    public static final int MIN_KEY_ACTIONS = 4;
+    public static final int ONE_DAY = 1000 * 60 * 60 * 24;
+
     public static final String FOLLOWERS_IDS_TYPE = "followers ids";
     public static final String OLD_AND_NEW_FOLLOWERS_TYPE = "old and new followers ids";
 
     public static final int SLEEP_BOUND = 1500;
 
-    public static final String USER_PARCELABLE = "user parcelable";
+    // for ads removal
+    public static final String ADS_REMOVAL_ACTIVE = "user purchased ads removal";
+    public static final String ADS_REMOVAL_EXPIRY_DATE = "ads removal expiry date";
+    public static final String IS_SHOWING_ADS = "is showing ads";
+
+
     public static final String USERS_PARCELABLE_ARRAYLIST = "users parcelable arraylist";
     public static final String CURRENT_USER_INDEX = "current user index";
 
@@ -33,7 +55,13 @@ public class Helper {
     public static final String DATABASE_URL = "https://followers-manager-for-twitter.firebaseio.com/";
 
     // Recycler view pagination constants
-    public static final int VIEW_THRESHOLD = 8; // made this 15 temp. change to 10 if anything is wrong
+    public static final int VIEW_THRESHOLD = 6; // made this 15 temp. change to 10 if anything is wrong
+
+    // popup menu constatns
+    public static String VIEW_FOLLOWERS = "view followers";
+    public static String VIEW_FOLLOWING = "view following";
+    public static String ADD_TO_WHITELIST = "add user to whitelist";
+    public static String REMOVE_FROM_WHITELIST = "remove user from whitelist";
 
     //Names for list to help activity identify which list to use
 
@@ -51,8 +79,14 @@ public class Helper {
     public static final String A_USERS_FOLLOWING = "a users following";
     public static final String USER_ID = "user_id";
     public static final String SEARCH_USERS = "search users";
+    public static final String REMIND_USER_TO_RATE_APP = "remind user to rate app", LAST_RATE_APP_ASK_TIMESTAMP = "last time asked user to rate app";
 
 
+    public static boolean isNetworkConnected(Context ctx) {
+        ConnectivityManager cm = (ConnectivityManager) ctx.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnected();
+    }
 
     // Twitter api Request Limits. check b4 following or unfollowing users
     public static final int FIFTEEN_MINUTES = 1000*60*15;
@@ -74,12 +108,71 @@ public class Helper {
         }
     }
 
+    public static void checkWhetherToAskUserToRateApp(Context context) {
+        long interval = System.currentTimeMillis() - MainActivity.lastTimeAskedUserToRateApp;
+
+        if(interval > ONE_DAY){
+            if(MainActivity.keyActionsCount > MIN_KEY_ACTIONS){
+                MainActivity.lastTimeAskedUserToRateApp = System.currentTimeMillis();
+                MainActivity.sp.edit().putLong(LAST_RATE_APP_ASK_TIMESTAMP,MainActivity.lastTimeAskedUserToRateApp).apply();
+                askUserToRateApp(context);
+            }
+        }
+
+    }
+
+    // Rate App Dialog
+    private static void askUserToRateApp(final Context context) {
+        new AlertDialog.Builder(context).setMessage("If you are enjoying this app, please take a minute of your time to give us a 5 star rating.")
+            .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    MainActivity.remindUserToRateApp = false;
+                    MainActivity.sp.edit().putBoolean(REMIND_USER_TO_RATE_APP,false).apply();
+                    goToAppStore(context);
+
+                }
+            })
+            .setNegativeButton("later",null)
+            .setNeutralButton("Never", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    MainActivity.remindUserToRateApp = false;
+                    MainActivity.sp.edit().putBoolean(REMIND_USER_TO_RATE_APP,false).apply();
+                }
+            })
+            .show();
+
+    }
+
+    public static void goToAppStore(Context context) {
+        Uri uri = Uri.parse("market://details?id=" + context.getPackageName());
+        Intent goToAppListing = new Intent(Intent.ACTION_VIEW, uri);
+
+        // After pressing back button,to be taken back to our application, we need to add following flags to intent.
+        goToAppListing.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
+                Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
+                Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+        try {
+            context.startActivity(goToAppListing);
+        } catch (ActivityNotFoundException e) {
+            context.startActivity(new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("http://play.google.com/store/apps/details?id=" + context.getPackageName())));
+        }
+    }
+
+
     /*
-     * increment request count and save to sharedpreferences
+     * increment request count and save to sharedpreferences, and also remind user to rate app, if possible
      */
-    public static void incrementApiRequestCount(){
+    public static void incrementApiRequestCount(Context ctx){
         ++MainActivity.apiRequestCount;
         MainActivity.sp.edit().putInt(REQUEST_COUNT_KEY,MainActivity.apiRequestCount).apply();
+        // also increment key actions count
+        if(MainActivity.remindUserToRateApp){
+            ++MainActivity.keyActionsCount;
+            checkWhetherToAskUserToRateApp(ctx);
+        }
     }
 
     public static void showSnackBar(View v, int minutesLeft){
@@ -246,6 +339,74 @@ public class Helper {
     public static boolean isFriend(Long user_id){
         return MainActivity.friendsIdsList.contains(user_id);
     }
+
+    public static boolean isWhielisted(long id) {
+        return MainActivity.whitelistedIdsList.contains(id);
+    }
+
+
+
+    public static void showRequestFollowBackBottomSheetDialog(final Context ctx, final String userScreenName, final BottomSheetDialog dialog, final MyTwitterApiClient twitterApiClient, final ProgressBar pb) {
+        View view = LayoutInflater.from(ctx).inflate(R.layout.request_followback_dialog,null);
+        RadioGroup radioGroup = view.findViewById(R.id.radio_group);
+        MaterialButton sendButton = view.findViewById(R.id.send_button);
+
+        final TextView tweetTextTv = view.findViewById(R.id.request_tweet_tv);
+        String requestTweet = "@"+userScreenName+" "+ctx.getString(R.string.kindly_follow_back);
+        tweetTextTv.setText(requestTweet);
+
+        radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                String requestTweet = "@"+userScreenName+" ";
+                if(checkedId == R.id.pls_follow_back_radio){
+
+                    requestTweet += ctx.getString(R.string.please_follow_back);
+
+                }else if(checkedId == R.id.kindly_follow_back_radio){
+                    requestTweet += ctx.getString(R.string.kindly_follow_back);
+                }
+                tweetTextTv.setText(requestTweet);
+            }
+
+        });
+
+        sendButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                pb.setVisibility(View.VISIBLE);
+                sendTweet(tweetTextTv.getText().toString(),twitterApiClient,ctx,pb);
+                dialog.dismiss();
+            }
+        });
+
+        dialog.setCancelable(true);
+        dialog.setCanceledOnTouchOutside(true);
+        dialog.setContentView(view);
+        dialog.show();
+    }
+
+    public static void sendTweet(String tweet, MyTwitterApiClient apiClient, final Context ctx, final ProgressBar pb) {
+
+        apiClient.getStatusUpdateCustomService().post(tweet, 1).enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void success(Result<ResponseBody> result) {
+                Toast.makeText(ctx, "follow back request sent successfully", Toast.LENGTH_SHORT).show();
+                pb.setVisibility(View.GONE);
+                incrementApiRequestCount(ctx);
+            }
+
+            @Override
+            public void failure(TwitterException exception) {
+                pb.setVisibility(View.GONE);
+                Toast.makeText(ctx, exception.getMessage(), Toast.LENGTH_SHORT).show();
+                exception.printStackTrace();
+            }
+
+        });
+
+    }
+
 
 }
 

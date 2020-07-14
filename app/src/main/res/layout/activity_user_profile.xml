@@ -113,6 +113,20 @@
                         app:layout_constraintTop_toBottomOf="@id/screen_name_tv" />
 
                     <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/whitelisted_status_tv"
+                        android:text="@string/whitelisted_user"
+                        android:layout_marginStart="8dp"
+                        android:textColor="@color/ccc_grey"
+                        android:padding="1dp"
+                        android:textSize="11sp"
+                        android:visibility="gone"
+                        app:layout_constraintStart_toEndOf="@id/follow_status_button"
+                        app:layout_constraintTop_toTopOf="@id/follow_status_button"
+                        app:layout_constraintBottom_toBottomOf="@id/follow_status_button"/>
+
+                    <TextView
                         android:id="@+id/followers_count_tv"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -172,6 +186,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         app:layout_constraintEnd_toEndOf="parent"
+                        android:id="@+id/follow_button_container"
                         app:layout_constraintTop_toBottomOf="@id/name_tv">
 
                     <com.google.android.material.button.MaterialButton
@@ -205,6 +220,17 @@
                             android:indeterminateTint="@color/tw__solid_white" />
 
                     </RelativeLayout>
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:id="@+id/popup_icon"
+                        android:elevation="6dp"
+                        android:src="@drawable/ic_keyboard_arrow_down_black_24dp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="@id/following_tv"
+                        app:layout_constraintBottom_toBottomOf="@id/following_tv" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -373,5 +399,26 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </ScrollView>
+
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/progress_bar"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="0.7" />
+
+    <FrameLayout
+        android:id="@+id/bottom_sheet"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="@style/Widget.Design.BottomSheet.Modal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
