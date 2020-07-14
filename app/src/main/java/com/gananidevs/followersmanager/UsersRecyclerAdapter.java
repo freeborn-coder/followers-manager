@@ -110,9 +110,13 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
             setFollowBtnAppearance(context, userItem.id, holder.followUnfollowButton);
         }
 
+        //if the user item is the currently signed in user, remove some views, else, add the views (make them visible)
         if(userItem.id == activeSession.getUserId()){
             holder.followStatusButton.setVisibility(View.GONE);
             holder.followUnfollowButton.setVisibility(View.GONE);
+        }else{
+            holder.followStatusButton.setVisibility(View.VISIBLE);
+            holder.followUnfollowButton.setVisibility(View.VISIBLE);
         }
 
         holder.nameTv.setText(userItem.name);
@@ -242,7 +246,7 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
                                 final Dialog confirmDialog = new Dialog(context);
                                 View dialogView = LayoutInflater.from(context).inflate(R.layout.confirm_dialog_layout,null,false);
                                 TextView confirmMessage = dialogView.findViewById(R.id.message_tv);
-                                confirmMessage.setText("you want to unfollow "+userScreenName+"?");
+                                confirmMessage.setText("unfollow "+userScreenName+"?");
                                 Button positiveBtn = dialogView.findViewById(R.id.positive_btn);
                                 positiveBtn.setText(R.string.yes);
                                 positiveBtn.setOnClickListener(new View.OnClickListener() {

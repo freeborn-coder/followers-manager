@@ -1,15 +1,15 @@
 package com.gananidevs.followersmanager;
 
-import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.RadioGroup;
 import android.widget.TextView;
@@ -33,26 +33,20 @@ import okhttp3.ResponseBody;
 public class Helper {
     private Helper(){}
 
-    public static final int IDS_COUNT_TO_RETRIEVE = 5000;
-    public static final int MIN_KEY_ACTIONS = 4;
-    public static final int ONE_DAY = 1000 * 60 * 60 * 24;
-
-    public static final String FOLLOWERS_IDS_TYPE = "followers ids";
-    public static final String OLD_AND_NEW_FOLLOWERS_TYPE = "old and new followers ids";
-
-    public static final int SLEEP_BOUND = 1500;
+    static final int IDS_COUNT_TO_RETRIEVE = 5000;
+    private static final int MIN_KEY_ACTIONS = 4;
+    public static final int ONE_DAY_IN_MILLISECONDS = 1000 * 60 * 60 * 24;
+    static final int ONE_DAY_IN_SECONDS = 60 * 60 * 24;
 
     // for ads removal
-    public static final String ADS_REMOVAL_ACTIVE = "user purchased ads removal";
-    public static final String ADS_REMOVAL_EXPIRY_DATE = "ads removal expiry date";
-    public static final String IS_SHOWING_ADS = "is showing ads";
+    static final String ADS_REMOVAL_ACTIVE = "user purchased ads removal";
+    static final String ADS_REMOVAL_EXPIRY_DATE = "ads removal expiry date";
+
+    static final String USERS_PARCELABLE_ARRAYLIST = "users parcelable arraylist";
+    static final String CURRENT_USER_INDEX = "current user index";
 
 
-    public static final String USERS_PARCELABLE_ARRAYLIST = "users parcelable arraylist";
-    public static final String CURRENT_USER_INDEX = "current user index";
-
-
-    public static final String DATABASE_URL = "https://followers-manager-for-twitter.firebaseio.com/";
+    static final String DATABASE_URL = "https://followers-manager-for-twitter.firebaseio.com/";
 
     // Recycler view pagination constants
     public static final int VIEW_THRESHOLD = 6; // made this 15 temp. change to 10 if anything is wrong
@@ -65,53 +59,49 @@ public class Helper {
 
     //Names for list to help activity identify which list to use
 
-    public static final String NON_FOLLOWERS = "Non Followers";
-    public static final String SCREEN_NAME_OF_USER = "screenNameOfUser";
-    public static final String LIST_NAME = "list_name";
-    public static final String MUTUAL_FOLLOWERS = "Mutual Followers";
-    public static final String FANS = "Fans";
-    public static final String NEW_FOLLOWERS = "New Followers";
-    public static final String WHITELISTED_USERS = "Whitelisted Users";
-    public static final String NEW_UNFOLLOWERS = "New Unfollowers";
-    public static final String FOLLOWERS = "Followers";
-    public static final String FOLLOWING = "Following";
-    public static final String A_USERS_FOLLOWERS = "a users followers";
-    public static final String A_USERS_FOLLOWING = "a users following";
-    public static final String USER_ID = "user_id";
-    public static final String SEARCH_USERS = "search users";
-    public static final String REMIND_USER_TO_RATE_APP = "remind user to rate app", LAST_RATE_APP_ASK_TIMESTAMP = "last time asked user to rate app";
+    static final String NON_FOLLOWERS = "Non Followers";
+    static final String SCREEN_NAME_OF_USER = "screenNameOfUser";
+    static final String LIST_NAME = "list_name";
+    static final String MUTUAL_FOLLOWERS = "Mutual Followers";
+    static final String FANS = "Fans";
+    static final String NEW_FOLLOWERS = "New Followers";
+    static final String WHITELISTED_USERS = "Whitelisted Users";
+    static final String NEW_UNFOLLOWERS = "New Unfollowers";
+    static final String FOLLOWERS = "Followers";
+    static final String FOLLOWING = "Following";
+    static final String A_USERS_FOLLOWERS = "a users followers";
+    static final String A_USERS_FOLLOWING = "a users following";
+    static final String USER_ID = "user_id";
+    static final String SEARCH_USERS = "search users";
+    static final String REMIND_USER_TO_RATE_APP = "remind user to rate app", LAST_RATE_APP_ASK_TIMESTAMP = "last time asked user to rate app";
 
 
-    public static boolean isNetworkConnected(Context ctx) {
+    static boolean isNetworkConnected(Context ctx) {
         ConnectivityManager cm = (ConnectivityManager) ctx.getSystemService(Context.CONNECTIVITY_SERVICE);
 
         return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnected();
     }
 
     // Twitter api Request Limits. check b4 following or unfollowing users
-    public static final int FIFTEEN_MINUTES = 1000*60*15;
-    public static final int MAX_REQUEST_COUNT = 15;
-    public static final String REQUEST_COUNT_KEY = "currentRequestCount";
-    public static final String LAST_TIMESTAMP_KEY = "last15minuteTimestamp";
+    static final int FIFTEEN_MINUTES = 1000*60*15;
+    private static final int MAX_REQUEST_COUNT = 15;
+    static final String REQUEST_COUNT_KEY = "currentRequestCount";
+    static final String LAST_TIMESTAMP_KEY = "last15minuteTimestamp";
 
-    public static boolean proceedWithApiCall(Long interval){
+    static boolean proceedWithApiCall(Long interval){
         if(interval > FIFTEEN_MINUTES){
             long timeStamp = System.currentTimeMillis();
             MainActivity.sp.edit().putLong(LAST_TIMESTAMP_KEY,timeStamp).apply();
             MainActivity.last15MinTimeStamp = timeStamp;
             MainActivity.apiRequestCount = 0;
             return true;
-        }else if(MainActivity.apiRequestCount < MAX_REQUEST_COUNT){
-            return true;
-        }else{
-            return false;
-        }
+        }else return MainActivity.apiRequestCount < MAX_REQUEST_COUNT;
     }
 
-    public static void checkWhetherToAskUserToRateApp(Context context) {
+    static void checkWhetherToAskUserToRateApp(Context context) {
         long interval = System.currentTimeMillis() - MainActivity.lastTimeAskedUserToRateApp;
 
-        if(interval > ONE_DAY){
+        if(interval > ONE_DAY_IN_MILLISECONDS){
             if(MainActivity.keyActionsCount > MIN_KEY_ACTIONS){
                 MainActivity.lastTimeAskedUserToRateApp = System.currentTimeMillis();
                 MainActivity.sp.edit().putLong(LAST_RATE_APP_ASK_TIMESTAMP,MainActivity.lastTimeAskedUserToRateApp).apply();
@@ -121,8 +111,59 @@ public class Helper {
 
     }
 
+    static long currentTimeInSeconds(){
+        return System.currentTimeMillis()/1000;
+    }
+
     // Rate App Dialog
     private static void askUserToRateApp(final Context context) {
+        final Dialog confirmDialog = new Dialog(context);
+        View dialogView = LayoutInflater.from(context).inflate(R.layout.confirm_dialog_layout,null);
+
+        (dialogView.findViewById(R.id.rating_bar)).setVisibility(View.VISIBLE);
+
+        TextView confirmMessage = dialogView.findViewById(R.id.message_tv);
+
+        confirmMessage.setText(context.getString(R.string.rate_app_request_msg));
+        Button positiveBtn = dialogView.findViewById(R.id.positive_btn);
+
+        positiveBtn.setText(context.getString(R.string.okay));
+
+        positiveBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                confirmDialog.dismiss();
+                MainActivity.remindUserToRateApp = false;
+                MainActivity.sp.edit().putBoolean(REMIND_USER_TO_RATE_APP,false).apply();
+                goToAppStore(context);
+            }
+        });
+
+        Button negativeBtn = dialogView.findViewById(R.id.negative_btn);
+        negativeBtn.setText(context.getString(R.string.later));
+        negativeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                confirmDialog.dismiss();
+            }
+        });
+
+        Button neutralBtn = dialogView.findViewById(R.id.neutral_btn);
+        neutralBtn.setVisibility(View.VISIBLE);
+        neutralBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MainActivity.remindUserToRateApp = false;
+                MainActivity.sp.edit().putBoolean(REMIND_USER_TO_RATE_APP,false).apply();
+            }
+        });
+
+        confirmDialog.setCancelable(false);
+
+        confirmDialog.setContentView(dialogView);
+        confirmDialog.show();
+
+        /*
         new AlertDialog.Builder(context).setMessage("If you are enjoying this app, please take a minute of your time to give us a 5 star rating.")
             .setPositiveButton("ok", new DialogInterface.OnClickListener() {
                 @Override
@@ -143,9 +184,10 @@ public class Helper {
             })
             .show();
 
+         */
     }
 
-    public static void goToAppStore(Context context) {
+    static void goToAppStore(Context context) {
         Uri uri = Uri.parse("market://details?id=" + context.getPackageName());
         Intent goToAppListing = new Intent(Intent.ACTION_VIEW, uri);
 
@@ -165,7 +207,7 @@ public class Helper {
     /*
      * increment request count and save to sharedpreferences, and also remind user to rate app, if possible
      */
-    public static void incrementApiRequestCount(Context ctx){
+    static void incrementApiRequestCount(Context ctx){
         ++MainActivity.apiRequestCount;
         MainActivity.sp.edit().putInt(REQUEST_COUNT_KEY,MainActivity.apiRequestCount).apply();
         // also increment key actions count
@@ -175,44 +217,46 @@ public class Helper {
         }
     }
 
-    public static void showSnackBar(View v, int minutesLeft){
+    static void showSnackBar(View v, int minutesLeft){
         Snackbar.make(v,v.getContext().getString(R.string.cannot_carry_out_action)+" "+minutesLeft+v.getContext().getString(R.string.minutes),Snackbar.LENGTH_LONG).show();
     }
 
-    public static int getMinutesLeft(long last15MinTimeStamp){
+    static int getMinutesLeft(long last15MinTimeStamp){
         return (int)(last15MinTimeStamp + FIFTEEN_MINUTES - System.currentTimeMillis())/(1000 * 60);
     }
 
 
     // this method returns a number that has been formatted to include commas, as a string
-    public static String insertCommas(int number){
+    static String insertCommas(int number){
         String numberString = Integer.toString(number);
 
         if(number < 1000){
             return numberString;
         }else{
-            String numberWithComma = "";
+            StringBuilder numberWithComma = new StringBuilder();
 
+            String last3chars;
+            int startIndex;
             while(numberString.length() > 3){
                 // get the last 3 characters of number string and prepend to stringbuilder
 
-                int startIndex = numberString.length() - 3;
-                String last3chars = numberString.substring(startIndex);
+                startIndex = numberString.length() - 3;
+                last3chars = numberString.substring(startIndex);
 
-                numberWithComma = ',' + last3chars + numberWithComma;
+                numberWithComma.insert(0, ',' + last3chars);
 
                 numberString = numberString.substring(0,startIndex); // remove the last 3 characters
 
             }
 
-            numberWithComma = numberString + numberWithComma;
-            return numberWithComma;
+            numberWithComma.insert(0, numberString);
+            return numberWithComma.toString();
         }
 
     }
 
     // Get result as string
-    public static String getResultString(Result<ResponseBody> result){
+    static String getResultString(Result<ResponseBody> result){
 
         String resultStr = "";
         try{
@@ -227,9 +271,9 @@ public class Helper {
     /*
      * Load array list of user followers ids or friends ids from result object
      */
-    public static ListAndCursorObject getIDsList(Result<ResponseBody> result){
+    static ListAndCursorObject getIDsList(Result<ResponseBody> result){
 
-        ArrayList<Long> idsList = null;
+        ArrayList<Long> idsList;
         ListAndCursorObject obj = new ListAndCursorObject();
 
         try {
@@ -254,39 +298,38 @@ public class Helper {
         return obj;
     }
 
-    public static String getIdsStr(int startIndex, int endIndex, ArrayList<Long> list){
-        String idsStr = "";
+    static String getIdsStr(int startIndex, int endIndex, ArrayList<Long> list){
+        StringBuilder idsStr = new StringBuilder();
         try {
             int count = list.size();
             if(count == 1){
-                idsStr += list.get(0);
+                idsStr.append(list.get(0));
 
             }else {
                 for (int i = startIndex; i <= endIndex; i++) {
                     if(i == endIndex){
-                        idsStr += list.get(i);
+                        idsStr.append(list.get(i));
                     }else{
-                        idsStr += list.get(i) + ",";
+                        idsStr.append(list.get(i)).append(",");
                     }
                 }
 
             }
-            //if(endIndex == count - 1) idsStr += "," + list.get(endIndex); // if it's last item of list, add the final id
         }catch(Exception e){
             e.printStackTrace();
         }
 
-        return idsStr;
+        return idsStr.toString();
 
     }
 
-    public static boolean loadUserItemsIntoAdapter(String resultString,UsersRecyclerAdapter adapter){
+    static boolean loadUserItemsIntoAdapter(String resultString, UsersRecyclerAdapter adapter){
         try {
             JSONArray jsonArray = new JSONArray(resultString);
 
             int start = adapter.userItemsList.size();
 
-            JSONObject jsonObject = null;
+            JSONObject jsonObject;
 
             for(int i = 0; i < jsonArray.length(); i++){
 
@@ -308,7 +351,7 @@ public class Helper {
 
     }
 
-    public static void changeButtonTextAndColor(Context context, MaterialButton btn, int newText, int color){
+    static void changeButtonTextAndColor(Context context, MaterialButton btn, int newText, int color){
         btn.setText(context.getString(newText));
         Drawable background = btn.getBackground();
         background.setTint(context.getColor(color));
@@ -317,7 +360,7 @@ public class Helper {
         //TypedValue.COMPLEX_UNIT_SP
     }
 
-    public static void setFollowBtnAppearance(Context context, Long userId, MaterialButton followUnfollowBtn){
+    static void setFollowBtnAppearance(Context context, Long userId, MaterialButton followUnfollowBtn){
         if(Helper.isFriend(userId)){
             changeButtonTextAndColor(context,followUnfollowBtn,R.string.unfollow_all_lowercase,R.color.colorAccent);
         }else{
@@ -328,7 +371,7 @@ public class Helper {
     /*
      * Check if user with the given Id follows the currently signed in user
      */
-    public static boolean isFollower(Long user_id){
+    static boolean isFollower(Long user_id){
         return MainActivity.followersIdsList.contains(user_id);
 
     }
@@ -336,17 +379,17 @@ public class Helper {
     /*
      * Check if the currently signed in user follows the user with the given id
      */
-    public static boolean isFriend(Long user_id){
+    static boolean isFriend(Long user_id){
         return MainActivity.friendsIdsList.contains(user_id);
     }
 
-    public static boolean isWhielisted(long id) {
+    static boolean isWhielisted(long id) {
         return MainActivity.whitelistedIdsList.contains(id);
     }
 
 
 
-    public static void showRequestFollowBackBottomSheetDialog(final Context ctx, final String userScreenName, final BottomSheetDialog dialog, final MyTwitterApiClient twitterApiClient, final ProgressBar pb) {
+    static void showRequestFollowBackBottomSheetDialog(final Context ctx, final String userScreenName, final BottomSheetDialog dialog, final MyTwitterApiClient twitterApiClient, final ProgressBar pb) {
         View view = LayoutInflater.from(ctx).inflate(R.layout.request_followback_dialog,null);
         RadioGroup radioGroup = view.findViewById(R.id.radio_group);
         MaterialButton sendButton = view.findViewById(R.id.send_button);
@@ -386,7 +429,7 @@ public class Helper {
         dialog.show();
     }
 
-    public static void sendTweet(String tweet, MyTwitterApiClient apiClient, final Context ctx, final ProgressBar pb) {
+    private static void sendTweet(String tweet, MyTwitterApiClient apiClient, final Context ctx, final ProgressBar pb) {
 
         apiClient.getStatusUpdateCustomService().post(tweet, 1).enqueue(new Callback<ResponseBody>() {
             @Override
@@ -411,12 +454,9 @@ public class Helper {
 }
 
 class ListAndCursorObject{
-    public ArrayList<Long> list;
-    public Long next_cursor;
+    ArrayList<Long> list;
+    Long next_cursor;
 
-    public void ListAndCursorObject(ArrayList<Long>list, Long cursor){
-        this.list = list;
-        this.next_cursor = cursor;
-    }
+    ListAndCursorObject(){}
 }
 

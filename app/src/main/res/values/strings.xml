@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Followers Manager</string>
-    <string name="three_ellipses">...</string>
+    <string name="three_ellipses">…</string>
     <string name="following_F_capitalized">Following</string>
     <string name="followers_f_capitalized">Followers</string>
     <string name="app_functions_text">Take better control of your twitter audience, see who unfollows you, who you do not follow, and more.</string>
@@ -23,7 +23,7 @@
     <string name="follows_you">follows you</string>
     <string name="doesnt_follow_you">doesn\'t follow you</string>
     <string name="no_valid_list">No valid list to show</string>
-    <string name="still_loading">Still loading...</string>
+    <string name="still_loading">Still loading…</string>
     <string name="yes">yes</string>
     <string name="no">no</string>
     <string name="description_text">user description text. let\'s see how long it can go. user description text.</string>
@@ -33,7 +33,7 @@
     <string name="followers_manager_package_name">play.google.com/id?com.gananidevs.followersmanager</string>
     <string name="view_on_twitter">view profile on twitter</string>
     <string name="question_mark">\?</string>
-    <string name="cancel">cancel</string>
+    <string name="cancel">Cancel</string>
     <string name="people_who_don_t_follow_you_back">People who don\'t follow you back</string>
     <string name="remove">remove</string>
     <string name="kindly_follow_back">kindly follow back</string>
@@ -60,13 +60,13 @@
     <string name="people_who">People who</string>
     <string name="who_unfollowed_recently">People who unfollowed you recently</string>
     <string name="who_followed_you_recently">People who followed you recently</string>
-    <string name="search">Search...</string>
+    <string name="search">Search…</string>
     <string name="search_results">Search Results:</string>
-    <string name="loading">loading...</string>
-    <string name="banner_test_ad_unit_id">ca-app-pub-3940256099942544/6300978111</string>
-    <string name="interstitial_test_ad_unit_id">ca-app-pub-3940256099942544/1033173712</string>
-    <string name="native_test_ad_unit_id">ca-app-pub-3940256099942544/2247696110</string>
-    <string name="app_test_id_for_ads">ca-app-pub-3940256099942544~3347511713</string>
+    <string name="loading">loading…</string>
+    <string name="banner_ad_unit_id">ca-app-pub-3891532626633016/1543772183</string>
+    <string name="interstitial_ad_unit_id">ca-app-pub-3891532626633016/3950443671</string>
+    <string name="native_ad_unit_id">ca-app-pub-3891532626633016/1205409571</string>
+    <string name="admob_app_id">ca-app-pub-3891532626633016~8817162512</string>
     <string name="log_out">Log out</string>
     <string name="share_this_app">Share this App</string>
     <string name="rate_this_app">Rate this app</string>
@@ -82,4 +82,9 @@
     <string name="just_view_on_twitter">View on twitter</string>
     <string name="remove_ads">Remove Ads</string>
     <string name="in_app_purchase_note">* Note that this is not a Subscription. It is a one-time purchase. After it expires, you can re-purchase it again.</string>
+    <string name="okay">okay</string>
+    <string name="later">later</string>
+    <string name="rate_app_request_msg">If you are enjoying this app, please take a minute of your time to give us a 5 star rating.</string>
+    <string name="new_version_dialog_message">New version available. Please update app to enjoy the latest features</string>
+    <string name="proceed">proceed</string>
 </resources>

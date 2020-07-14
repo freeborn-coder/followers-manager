@@ -45,7 +45,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             ads:adSize="SMART_BANNER"
-            ads:adUnitId="@string/banner_test_ad_unit_id"
+            ads:adUnitId="@string/banner_ad_unit_id"
             ads:layout_constraintBottom_toBottomOf="parent">
         </com.google.android.gms.ads.AdView>
 

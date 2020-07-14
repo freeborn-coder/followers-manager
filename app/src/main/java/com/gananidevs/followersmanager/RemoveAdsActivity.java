@@ -4,9 +4,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Dialog;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.billingclient.api.BillingClient;
@@ -21,8 +24,15 @@ import com.android.billingclient.api.SkuDetails;
 import com.android.billingclient.api.SkuDetailsParams;
 import com.android.billingclient.api.SkuDetailsResponseListener;
 
+import org.w3c.dom.Text;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+
+import static com.gananidevs.followersmanager.Helper.ADS_REMOVAL_EXPIRY_DATE;
+import static com.gananidevs.followersmanager.Helper.ONE_DAY_IN_SECONDS;
+import static com.gananidevs.followersmanager.Helper.currentTimeInSeconds;
 
 public class RemoveAdsActivity extends AppCompatActivity implements PurchasesUpdatedListener, BillingClientStateListener, View.OnClickListener {
 
@@ -31,9 +41,9 @@ public class RemoveAdsActivity extends AppCompatActivity implements PurchasesUpd
     private static final String SIX_MONTHS_SKU = "remove_ads_6_months";
     private static final String TWELVE_MONTHS_SKU = "remove_ads_12_months";
     private SkuDetails threeMonthsSkuDetails, sixMonthsSkuDetails, twelveMonthsSkuDetails;
-    long THREE_MONTHS = 1000*86400*90;
-    long SIX_MONTHS = 1000*86400*180;
-    long TWELVE_MONTHS = 1000*86400*365;
+    long THREE_MONTHS_IN_SECONDS = ONE_DAY_IN_SECONDS*90;
+    long SIX_MONTHS_IN_SECONDS = ONE_DAY_IN_SECONDS *180;
+    long TWELVE_MONTHS_IN_SECONDS = ONE_DAY_IN_SECONDS *365;
 
     BillingClient billingClient;
 
@@ -44,6 +54,8 @@ public class RemoveAdsActivity extends AppCompatActivity implements PurchasesUpd
 
         assert getSupportActionBar() != null;
         getSupportActionBar().setTitle(getString(R.string.remove_ads));
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         threeMonthsBtn = findViewById(R.id.three_months_btn);
         sixMonthsBtn = findViewById(R.id.six_months_btn);
@@ -60,6 +72,56 @@ public class RemoveAdsActivity extends AppCompatActivity implements PurchasesUpd
         threeMonthsBtn.setOnClickListener(this);
         sixMonthsBtn.setOnClickListener(this);
         twelveMonthsBtn.setOnClickListener(this);
+
+        /*
+        if(BuildConfig.DEBUG){
+            MainActivity.adsRemovalActive = true;
+            MainActivity.sp.edit().putLong(ADS_REMOVAL_EXPIRY_DATE,currentTimeInSeconds()+60*60*new Random().nextInt(98)+12).apply();
+        }
+
+         */
+
+        if(MainActivity.adsRemovalActive){
+            long adsRemovalExpiry = MainActivity.sp.getLong(ADS_REMOVAL_EXPIRY_DATE,0);
+            if(currentTimeInSeconds() < adsRemovalExpiry){
+                long secondsLeft = adsRemovalExpiry - currentTimeInSeconds();
+                String timeLeft = "";
+                int daysLeft = (int) ((secondsLeft)/ONE_DAY_IN_SECONDS);
+                if(daysLeft < 1){
+                    timeLeft = ((secondsLeft / 60)/60)+" hours";
+                }else{
+                    timeLeft = daysLeft + " days";
+                }
+                final Dialog messageDialog = new Dialog(this);
+                View view = getLayoutInflater().inflate(R.layout.confirm_dialog_layout,null);
+                TextView msgTv = view.findViewById(R.id.message_tv);
+
+                msgTv.setText("You already have Ads Removal active for the next "+timeLeft+".\n\nPurchasing Ads removal again will add to the previous purchase. Do you want to proceed?");
+
+                Button positiveBtn = view.findViewById(R.id.positive_btn);
+                positiveBtn.setText(getString(R.string.yes));
+                positiveBtn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        messageDialog.dismiss();
+                    }
+                });
+                Button negativeBtn = view.findViewById(R.id.negative_btn);
+                negativeBtn.setText(getString(R.string.cancel));
+                negativeBtn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        messageDialog.dismiss();
+                        finish();
+                    }
+                });
+                messageDialog.setCancelable(false);
+                messageDialog.setContentView(view);
+                messageDialog.show();
+
+            }
+        }
+
     }
 
 
@@ -85,31 +147,41 @@ public class RemoveAdsActivity extends AppCompatActivity implements PurchasesUpd
         // Consume the item, and give user the reward of the purchase
         consumeProduct(purchase.getPurchaseToken());
 
-        long expiryDate = 0;
+        long expiryDate = currentTimeInSeconds();
+        if(MainActivity.adsRemovalActive){
+            long lastPurchaseExpiryDate = MainActivity.sp.getLong(ADS_REMOVAL_EXPIRY_DATE,0);
+            if(lastPurchaseExpiryDate > currentTimeInSeconds()){
+                expiryDate = lastPurchaseExpiryDate;
+            }
+        }
+
         String time = "";
         String purchaseSku = purchase.getSku();
 
-        if(purchaseSku.equals(THREE_MONTHS_SKU)){
+        switch (purchaseSku) {
+            case THREE_MONTHS_SKU:
 
-            expiryDate = System.currentTimeMillis() + THREE_MONTHS;
-            time = "3 months";
+                expiryDate += THREE_MONTHS_IN_SECONDS;
+                time = "3 months";
 
-        }else if(purchaseSku.equals(SIX_MONTHS_SKU)){
+                break;
+            case SIX_MONTHS_SKU:
 
-            expiryDate = System.currentTimeMillis() + SIX_MONTHS;
-            time = "6 months";
+                expiryDate += SIX_MONTHS_IN_SECONDS;
+                time = "6 months";
 
-        }else if(purchaseSku.equals(TWELVE_MONTHS_SKU)){
+                break;
+            case TWELVE_MONTHS_SKU:
 
-            expiryDate = System.currentTimeMillis() + TWELVE_MONTHS;
-            time = "12 months";
+                expiryDate += TWELVE_MONTHS_IN_SECONDS;
+                time = "12 months";
 
+                break;
         }
 
         Toast.makeText(this,"Purchase Complete. You will not be seeing any Ads for the next "+time,Toast.LENGTH_LONG).show();
 
         removeAdsTill(expiryDate);
-
 
     }
 
@@ -151,7 +223,7 @@ public class RemoveAdsActivity extends AppCompatActivity implements PurchasesUpd
             skuList.add(TWELVE_MONTHS_SKU);
 
             SkuDetailsParams.Builder params = SkuDetailsParams.newBuilder();
-            params.setSkusList(skuList);
+            params.setSkusList(skuList).setType(BillingClient.SkuType.INAPP);
 
             billingClient.querySkuDetailsAsync(params.build(), new SkuDetailsResponseListener() {
                 @Override
@@ -209,5 +281,13 @@ public class RemoveAdsActivity extends AppCompatActivity implements PurchasesUpd
         }else{
             Toast.makeText(RemoveAdsActivity.this,"SKuDetail is null!",Toast.LENGTH_LONG).show();
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if(item.getItemId() == android.R.id.home){
+            finish();
+        }
+        return true;
     }
 }

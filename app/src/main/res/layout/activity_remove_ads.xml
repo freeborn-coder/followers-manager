@@ -48,7 +48,8 @@
                         android:layout_marginStart="5dp"
                         android:layout_marginBottom="15dp"
                         android:textSize="15sp"
-                        android:text="Followers Manager: Remove ads for 90 days"/>
+                        android:textColor="@color/very_dark_222"
+                        android:text="Remove ads for 90 days"/>
 
                     <Button
                         android:id="@+id/three_months_btn"
@@ -59,7 +60,7 @@
                         android:backgroundTint="@color/colorAccent"
 
                         android:elevation="4dp"
-                        android:text="buy now - N900.0" />
+                        android:text="buy now - price" />
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
@@ -92,7 +93,8 @@
                         android:layout_marginStart="5dp"
                         android:layout_marginBottom="15dp"
                         android:textSize="15sp"
-                        android:text="Followers Manager: Remove ads for 180 days"/>
+                        android:textColor="@color/very_dark_222"
+                        android:text="Remove ads for 180 days"/>
 
                     <Button
                         android:id="@+id/six_months_btn"
@@ -102,7 +104,7 @@
                         android:textStyle="bold"
                         android:backgroundTint="@color/colorAccent"
                         android:elevation="4dp"
-                        android:text="buy now - N1700.0" />
+                        android:text="buy now - price"/>
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
@@ -134,8 +136,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="5dp"
                         android:layout_marginBottom="15dp"
+                        android:textColor="@color/very_dark_222"
                         android:textSize="15sp"
-                        android:text="Followers Manager: Remove ads for 365 days"/>
+                        android:text="Remove ads for 365 days"/>
 
                     <Button
                         android:id="@+id/twelve_months_btn"
@@ -145,7 +148,7 @@
                         android:textStyle="bold"
                         android:backgroundTint="@color/colorAccent"
                         android:elevation="4dp"
-                        android:text="buy now - N3,400.0" />
+                        android:text="buy now - price" />
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>

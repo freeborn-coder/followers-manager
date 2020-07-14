@@ -51,13 +51,11 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
-import com.twitter.sdk.android.core.models.User;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -67,7 +65,6 @@ import okhttp3.ResponseBody;
 import static com.gananidevs.followersmanager.Helper.A_USERS_FOLLOWERS;
 import static com.gananidevs.followersmanager.Helper.A_USERS_FOLLOWING;
 import static com.gananidevs.followersmanager.Helper.CURRENT_USER_INDEX;
-import static com.gananidevs.followersmanager.Helper.DATABASE_URL;
 import static com.gananidevs.followersmanager.Helper.LIST_NAME;
 import static com.gananidevs.followersmanager.Helper.SCREEN_NAME_OF_USER;
 import static com.gananidevs.followersmanager.Helper.USERS_PARCELABLE_ARRAYLIST;
@@ -157,6 +154,8 @@ public class UserProfileActivity extends AppCompatActivity {
             followStatusBtn.setVisibility(View.GONE);
             followUnfollowBtn.setVisibility(View.GONE);
         }else {
+            followStatusBtn.setVisibility(View.VISIBLE);
+            followUnfollowBtn.setVisibility(View.VISIBLE);
 
             // check if the user is a follower for follow status button
             if (Helper.isFollower(userItem.id)) {
@@ -295,6 +294,40 @@ public class UserProfileActivity extends AppCompatActivity {
                     } else if (btnText.equals(getString(R.string.unfollow_all_lowercase))) {
 
                         // unfollow the specified user
+                        final Dialog confirmDialog = new Dialog(UserProfileActivity.this);
+                        View dialogView = getLayoutInflater().inflate(R.layout.confirm_dialog_layout,null,false);
+                        TextView confirmMessage = dialogView.findViewById(R.id.message_tv);
+                        confirmMessage.setText("unfollow "+userScreenName+"?");
+                        Button positiveBtn = dialogView.findViewById(R.id.positive_btn);
+                        positiveBtn.setText(R.string.yes);
+                        positiveBtn.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                confirmDialog.dismiss();
+                                showProgressHideButtonText(btnProgressBar, followUnfollowBtn, UserProfileActivity.this);
+                                int delay = new Random().nextInt(1000) + 1500;
+                                new Handler().postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        unfollowUser(userId);
+                                    }
+                                }, delay);
+                            }
+                        });
+
+                        Button negativeBtn = dialogView.findViewById(R.id.negative_btn);
+                        negativeBtn.setText(R.string.cancel);
+                        negativeBtn.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                confirmDialog.dismiss();
+                            }
+                        });
+                        confirmDialog.setContentView(dialogView);
+                        confirmDialog.show();
+
+                        /*
+                        // unfollow the specified user
                         new AlertDialog.Builder(UserProfileActivity.this).setTitle("confirm action")
                                 .setMessage(getString(R.string.unfollow_all_lowercase) + " " + userScreenName + "?")
                                 .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
@@ -314,6 +347,7 @@ public class UserProfileActivity extends AppCompatActivity {
                                 }).setNegativeButton(getString(R.string.cancel), null)
                                 .show();
 
+                         */
                     }
 
                 }else{ // Request count is >= 15 within 15 minutes, so do not proceed with request
@@ -482,7 +516,6 @@ public class UserProfileActivity extends AppCompatActivity {
     }
 
     private void followUser(final Long userId) {
-        MyTwitterApiClient twitterApiClient = new MyTwitterApiClient(TwitterCore.getInstance().getSessionManager().getActiveSession());
 
         twitterApiClient.getFriendshipsCreateCustomService().post(userId).enqueue(new Callback<ResponseBody>() {
             @Override
@@ -504,7 +537,6 @@ public class UserProfileActivity extends AppCompatActivity {
     }
 
     private void unfollowUser(final Long userId){
-        MyTwitterApiClient twitterApiClient = new MyTwitterApiClient(TwitterCore.getInstance().getSessionManager().getActiveSession());
 
         twitterApiClient.getFriendshipsDestroyCustomService().post(userId).enqueue(new Callback<ResponseBody>() {
             @Override
@@ -553,7 +585,7 @@ public class UserProfileActivity extends AppCompatActivity {
     }
 
     private void loadAds() {
-        adLoader = new AdLoader.Builder(this,getString(R.string.native_test_ad_unit_id))
+        adLoader = new AdLoader.Builder(this,getString(R.string.native_ad_unit_id))
                 .forUnifiedNativeAd(new UnifiedNativeAd.OnUnifiedNativeAdLoadedListener() {
                     @Override
                     public void onUnifiedNativeAdLoaded(UnifiedNativeAd unifiedNativeAd) {
@@ -587,7 +619,7 @@ public class UserProfileActivity extends AppCompatActivity {
         adLoader.loadAd(new AdRequest.Builder().build());
 
         mInterstitialAd = new InterstitialAd(this);
-        mInterstitialAd.setAdUnitId(getString(R.string.interstitial_test_ad_unit_id));
+        mInterstitialAd.setAdUnitId(getString(R.string.interstitial_ad_unit_id));
         mInterstitialAd.loadAd(new AdRequest.Builder().build());
 
         mInterstitialAd.setAdListener(new AdListener() {

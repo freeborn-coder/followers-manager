@@ -59,7 +59,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.Random;
 
 import okhttp3.ResponseBody;
@@ -88,7 +90,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public static SharedPreferences sp;
     public static long last15MinTimeStamp, lastTimeAskedUserToRateApp;
-    String followersIdsFileName;
+    static String followersIdsFileName;
     private static File followersIdsFile;
     Dialog loadingDialog;
 
@@ -107,19 +109,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // load shardPrefs manager
         sp = PreferenceManager.getDefaultSharedPreferences(this);
 
+        /*
         if(BuildConfig.DEBUG) {
             StrictMode.ThreadPolicy threadPolicy = new StrictMode.ThreadPolicy.Builder().detectNetwork().detectDiskReads().detectDiskWrites().penaltyLog().penaltyFlashScreen().build();
             StrictMode.setThreadPolicy(threadPolicy);
             StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().detectActivityLeaks().detectLeakedClosableObjects().penaltyLog().build());
         }
 
+         */
+
         // load settings (preferences) using AsyncTask
-        new LoadSettingsTask().execute();
+        //new LoadSettingsTask().execute();
+        loadSharedPrefs();
 
         // Get active twitter session
         activeSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
 
         if(activeSession != null) {
+            followersIdsFileName = activeSession.getUserName() + "_saved_followers_ids";
+            followersIdsFile = new File(getFilesDir() + File.pathSeparator + followersIdsFileName);
 
             setUpUI(activeSession);
 
@@ -138,7 +146,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    private static void loadSharedPrefs() {
+    private void loadSharedPrefs() {
         remindUserToRateApp = sp.getBoolean(REMIND_USER_TO_RATE_APP,true);
         apiRequestCount = sp.getInt(REQUEST_COUNT_KEY,0);
         last15MinTimeStamp = sp.getLong(LAST_TIMESTAMP_KEY,0);
@@ -147,20 +155,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         if(adsRemovalActive){
             // check if it has expired
-            long adsRemovalExpiryDate = sp.getLong(ADS_REMOVAL_EXPIRY_DATE,System.currentTimeMillis());
-            if(System.currentTimeMillis() > adsRemovalExpiryDate){
+            long adsRemovalExpiryDate = sp.getLong(ADS_REMOVAL_EXPIRY_DATE,0);
+            if(currentTimeInSeconds() > adsRemovalExpiryDate){
                 // The ads removal has expired, so the user will continue to see Ads
                 adsRemovalActive = false;
                 sp.edit().putBoolean(ADS_REMOVAL_ACTIVE, adsRemovalActive).apply();
                 isShowingAds = true;
+            }else{
+                isShowingAds = false;
             }
-
+        }else{
+            isShowingAds = true;
         }
     }
 
     private void setUpUI(final TwitterSession activeSession) {
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
 
         drawerLayout = findViewById(R.id.drawer_layout);
         navigationView = findViewById(R.id.navigation_view);
@@ -222,7 +234,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         newUnfollowersIdsList = new ArrayList<>();
         lastSavedFollowersIdsList = new ArrayList<>();
 
-        Long currentUserId = activeSession.getUserId();
+        long currentUserId = activeSession.getUserId();
 
         // load twitter data for this user
         loadTwitterData(currentUserId);
@@ -306,9 +318,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void loadDataIntoUI(UserItem user) {
         TextView navHeaderTv = findViewById(R.id.nav_header_username_tv);
-        navHeaderTv.setText("@"+user.screenName);
+        navHeaderTv.setText("@" + user.screenName);
 
-        nameTv.setText(user.name);
+        //nameTv.setText(user.name);
+        toolbar.setTitle(user.name);
+        nameTv.setVisibility(View.GONE);
         screenNameTv.setText(user.screenName);
         followingCountTv.setText(Helper.insertCommas(user.friendsCount));
         followersCountTv.setText(Helper.insertCommas(user.followersCount));
@@ -332,15 +346,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onComplete(@NonNull Task<AuthResult> task) {
 
                 if (!task.isSuccessful()) {
-                    task.getException().printStackTrace();
+                    Objects.requireNonNull(task.getException()).printStackTrace();
 
-                    if (BuildConfig.DEBUG) {
-                        Log.i("Firebase:", "Sign in not successful");
-                        Toast.makeText(MainActivity.this, "firebase sign in failed " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                    }
                     signIntoFirebaseUsingTwitter(session);
 
-                }else if(task.isSuccessful()) {
+                }else {
+                    task.isSuccessful();
                     getWhitelistedIds();
                 }
 
@@ -358,7 +369,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         dbRef.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                Long id = Long.valueOf(dataSnapshot.getKey());
+                Long id = Long.valueOf(Objects.requireNonNull(dataSnapshot.getKey()));
                 if (!whitelistedIdsList.contains(id)) {
                     whitelistedIdsList.add(id);
                     nonFollowersIdsList.remove(id);
@@ -373,7 +384,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             @Override
             public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-                whitelistedIdsList.remove(Long.valueOf(dataSnapshot.getKey()));
+                whitelistedIdsList.remove(Long.valueOf(Objects.requireNonNull(dataSnapshot.getKey())));
                 setWhitelistButtonText();
             }
 
@@ -412,8 +423,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 if(listAndCursorObject.next_cursor == 0) {
 
-
-                    new FollowersAsyncTask().execute(); // get those users who have unfollowed the currentUser|will do this later
+                    // get those users who have unfollowed the currentUser, making use of weak reference
+                    new WeakReference<>(new FollowersAsyncTask()).get().execute();
 
                     // means we have gotten to the last page
                     if (followersIdsList.size() > 0 && friendsIdsList.size() > 0 && !isFollowersAndFriendsListReady && hasFinishedBackgroundTask) {
@@ -443,12 +454,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    private  void getNewUnfollowersAndFollowers() {
+    private void getNewUnfollowersAndFollowers() {
 
             try {
-
-                followersIdsFileName = activeSession.getUserName() + "_saved_followers_ids";
-                followersIdsFile = new File(getFilesDir() + File.pathSeparator + followersIdsFileName);
 
                 if (followersIdsFile.exists()) {
                     // file exists, so get new unfollowers
@@ -466,8 +474,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 newUnfollowersIdsList.add(id); // it is a new unfollower
                             }
                         }
-
                     }
+
+                    fis.close();
+                    ois.close();
 
                 } else {
                     // the file does not exist, so make a new one
@@ -515,14 +525,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     static class LoadSettingsTask extends AsyncTask<Void,Void,Void>{
         @Override
         protected Void doInBackground(Void... voids) {
-            loadSharedPrefs();
-            if(BuildConfig.DEBUG){
-                if(isShowingAds) {
-                    sp.edit().putBoolean(ADS_REMOVAL_ACTIVE, true).apply();
-                    sp.edit().putLong(ADS_REMOVAL_EXPIRY_DATE, System.currentTimeMillis() + FIFTEEN_MINUTES * 3).apply();
-                    isShowingAds = false;
-                }
-            }
+            //loadSharedPrefs();
             return null;
         }
     }
@@ -579,7 +582,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void failure(TwitterException exception) {
                 loadingDialog.dismiss();
-                //progressBar.setVisibility(View.GONE);
+                if(loadingDialog.isShowing()) loadingDialog.dismiss();
                 isLoading = false;
             }
         });
@@ -799,20 +802,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         confirmDialog.setContentView(dialogView);
         confirmDialog.show();
 
-        /*
-        AlertDialog.Builder builder = new AlertDialog.Builder(this)
-            .setMessage(getString(R.string.exit_confirm_dialog_msg))
-            .setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
-
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    finish();
-                }
-            }).setNegativeButton(getString(R.string.no), null);
-
-        builder.create().show();
-
-         */
     }
 
     @Override

@@ -13,6 +13,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -30,6 +31,8 @@ import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
 import com.twitter.sdk.android.core.identity.TwitterAuthClient;
+
+import java.util.Objects;
 
 public class WelcomeScreenActivity extends AppCompatActivity {
 
@@ -124,7 +127,7 @@ public class WelcomeScreenActivity extends AppCompatActivity {
                 }else{
                     progressBar.setVisibility(View.GONE);
                     if(BuildConfig.DEBUG){
-                        task.getException().printStackTrace();
+                        Objects.requireNonNull(task.getException()).printStackTrace();
                         Toast.makeText(WelcomeScreenActivity.this,task.getException().getMessage(),Toast.LENGTH_LONG).show();
                     }
                 }
@@ -144,8 +147,6 @@ public class WelcomeScreenActivity extends AppCompatActivity {
             setUpTwitterAndGoToMainActivity();
         }
 
-        progressBar.setVisibility(View.GONE);
-
     }
 
     private void setUpTwitterAndGoToMainActivity() {
@@ -156,15 +157,45 @@ public class WelcomeScreenActivity extends AppCompatActivity {
                 .build();
         Twitter.initialize(config);
         TwitterSession session = TwitterCore.getInstance().getSessionManager().getActiveSession();
+
         if (session != null || firebaseAuth.getCurrentUser() != null) {
             isSignedIn = true;
             goToMainActivity();
+        }else{
+            progressBar.setVisibility(View.GONE);
         }
+
     }
 
     private void askUserToUpdateApp() {
+        final Dialog confirmDialog = new Dialog(this);
+        View view = getLayoutInflater().inflate(R.layout.confirm_dialog_layout,null);
+        TextView msgTv = view.findViewById(R.id.message_tv);
+        msgTv.setText(getString(R.string.new_version_dialog_message));
+        Button positiveBtn, negativeBtn;
+        positiveBtn = view.findViewById(R.id.positive_btn);
+        negativeBtn = view.findViewById(R.id.negative_btn);
+        positiveBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Helper.goToAppStore(WelcomeScreenActivity.this);
+                confirmDialog.dismiss();
+            }
+        });
+
+        negativeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                confirmDialog.dismiss();
+            }
+        });
+
+        confirmDialog.setCancelable(false);
+        confirmDialog.show();
+
+        /*
         AlertDialog dialog = new AlertDialog.Builder(this)
-                .setMessage("New version available. Please update app to enjoy the latest features")
+                .setMessage(getString(R.string.new_version_dialog_message))
                 .setPositiveButton("update", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -173,6 +204,8 @@ public class WelcomeScreenActivity extends AppCompatActivity {
                 }).setNegativeButton("",null)
                 .setCancelable(false)
                 .show();
+
+         */
     }
 
     @Override
