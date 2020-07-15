@@ -60,7 +60,7 @@
                         android:backgroundTint="@color/colorAccent"
 
                         android:elevation="4dp"
-                        android:text="buy now - price" />
+                        android:text="buy now - price?" />
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
@@ -104,7 +104,7 @@
                         android:textStyle="bold"
                         android:backgroundTint="@color/colorAccent"
                         android:elevation="4dp"
-                        android:text="buy now - price"/>
+                        android:text="buy now - price?"/>
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
@@ -148,7 +148,7 @@
                         android:textStyle="bold"
                         android:backgroundTint="@color/colorAccent"
                         android:elevation="4dp"
-                        android:text="buy now - price" />
+                        android:text="buy now - price?" />
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>

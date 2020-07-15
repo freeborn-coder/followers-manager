@@ -44,6 +44,7 @@ public class RemoveAdsActivity extends AppCompatActivity implements PurchasesUpd
     long THREE_MONTHS_IN_SECONDS = ONE_DAY_IN_SECONDS*90;
     long SIX_MONTHS_IN_SECONDS = ONE_DAY_IN_SECONDS *180;
     long TWELVE_MONTHS_IN_SECONDS = ONE_DAY_IN_SECONDS *365;
+    Dialog loadingDialog;
 
     BillingClient billingClient;
 
@@ -56,6 +57,10 @@ public class RemoveAdsActivity extends AppCompatActivity implements PurchasesUpd
         getSupportActionBar().setTitle(getString(R.string.remove_ads));
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        loadingDialog = new Dialog(this);
+        loadingDialog.setContentView(getLayoutInflater().inflate(R.layout.loading_dialog_view,null));
+        loadingDialog.setCancelable(false);
+        loadingDialog.show();
 
         threeMonthsBtn = findViewById(R.id.three_months_btn);
         sixMonthsBtn = findViewById(R.id.six_months_btn);
@@ -73,13 +78,6 @@ public class RemoveAdsActivity extends AppCompatActivity implements PurchasesUpd
         sixMonthsBtn.setOnClickListener(this);
         twelveMonthsBtn.setOnClickListener(this);
 
-        /*
-        if(BuildConfig.DEBUG){
-            MainActivity.adsRemovalActive = true;
-            MainActivity.sp.edit().putLong(ADS_REMOVAL_EXPIRY_DATE,currentTimeInSeconds()+60*60*new Random().nextInt(98)+12).apply();
-        }
-
-         */
 
         if(MainActivity.adsRemovalActive){
             long adsRemovalExpiry = MainActivity.sp.getLong(ADS_REMOVAL_EXPIRY_DATE,0);
@@ -234,19 +232,20 @@ public class RemoveAdsActivity extends AppCompatActivity implements PurchasesUpd
                         for(SkuDetails skuDetail: list){
                             sku = skuDetail.getSku();
                             if(sku.equals(THREE_MONTHS_SKU)){
-                                threeMonthsBtn.setText(skuDetail.getSku());
+                                threeMonthsBtn.setText("Buy now - "+ skuDetail.getPrice());
                                 threeMonthsSkuDetails = skuDetail;
                             }else if(sku.equals(SIX_MONTHS_SKU)){
-                                sixMonthsBtn.setText(sku);
+                                sixMonthsBtn.setText("Buy now - "+ skuDetail.getPrice());
                                 sixMonthsSkuDetails = skuDetail;
                             }else if(sku.equals(TWELVE_MONTHS_SKU)){
-                                twelveMonthsBtn.setText(sku);
+                                twelveMonthsBtn.setText("Buy now - "+ skuDetail.getPrice());
                                 twelveMonthsSkuDetails = skuDetail;
                             }
                         }
-
-
                     }
+
+                    loadingDialog.dismiss();
+
                 }
             });
 
@@ -279,7 +278,7 @@ public class RemoveAdsActivity extends AppCompatActivity implements PurchasesUpd
 
 
         }else{
-            Toast.makeText(RemoveAdsActivity.this,"SKuDetail is null!",Toast.LENGTH_LONG).show();
+            Toast.makeText(RemoveAdsActivity.this,"Purchases are not loaded!",Toast.LENGTH_LONG).show();
         }
     }
 

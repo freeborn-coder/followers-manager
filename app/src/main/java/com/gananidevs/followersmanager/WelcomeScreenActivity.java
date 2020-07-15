@@ -46,7 +46,7 @@ public class WelcomeScreenActivity extends AppCompatActivity {
     private boolean isSignedIn = false;
     ProgressBar progressBar;
 
-    int currentAppVersionCode = 2313100; // Remember to update or increment this whenever you update your app.
+    int currentAppVersionCode = 2313101; // Remember to update or increment this whenever you update your app.
     int latestAppVersionCode;
 
     @Override
@@ -163,6 +163,7 @@ public class WelcomeScreenActivity extends AppCompatActivity {
             goToMainActivity();
         }else{
             progressBar.setVisibility(View.GONE);
+            Toast.makeText(this,getString(R.string.sign_in_to_continue),Toast.LENGTH_SHORT).show();
         }
 
     }
@@ -193,19 +194,6 @@ public class WelcomeScreenActivity extends AppCompatActivity {
         confirmDialog.setCancelable(false);
         confirmDialog.show();
 
-        /*
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setMessage(getString(R.string.new_version_dialog_message))
-                .setPositiveButton("update", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Helper.goToAppStore(WelcomeScreenActivity.this);
-                    }
-                }).setNegativeButton("",null)
-                .setCancelable(false)
-                .show();
-
-         */
     }
 
     @Override

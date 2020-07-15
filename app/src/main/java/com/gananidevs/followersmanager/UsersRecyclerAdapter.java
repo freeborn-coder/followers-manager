@@ -176,9 +176,6 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
 
             ClickListener listener = new ClickListener();
 
-            nameTv.setOnClickListener(listener);
-            screenNameTv.setOnClickListener(listener);
-            profileImage.setOnClickListener(listener);
             followUnfollowButton.setOnClickListener(listener);
             dropDownArrow.setOnClickListener(listener);
 
@@ -203,12 +200,7 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
                 final Long userId = currentUserItem.id;
                 final String userScreenName = currentUserItem.screenName;
 
-                if(viewId == nameTv.getId() || viewId == screenNameTv.getId() || viewId == profileImage.getId()){
-                    if(!currentUserItem.isSuspendedUser){
-                        viewProfile(context,getAdapterPosition());
-                    }
-
-                }else if(viewId == followUnfollowButton.getId()){
+                if(viewId == followUnfollowButton.getId()){
 
                     String btnText = followUnfollowButton.getText().toString();
 

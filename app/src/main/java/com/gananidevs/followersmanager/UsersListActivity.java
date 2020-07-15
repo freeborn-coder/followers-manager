@@ -8,7 +8,9 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Process;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,6 +28,7 @@ import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
 
+import java.lang.ref.WeakReference;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -120,11 +123,22 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
                             isLoading = false;
 
                             // Do pagination.. i.e. fetch new data
-                            int startIndex = page_number * itemCount;
-                            int endIndex = startIndex + itemCount;
+                            final int startIndex = page_number * itemCount;
+                            final int endIndex = startIndex + itemCount;
 
                             if(!hasReachedEnd) {
-                                loadRecyclerViewData(startIndex, endIndex, progressBar, recyclerAdapter, userIdsList);
+                                if(isNetworkConnected(getBaseContext())) {
+                                    new Thread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
+                                            loadRecyclerViewData(startIndex, endIndex, progressBar, recyclerAdapter, userIdsList);
+                                        }
+                                    }).start();
+
+                                }else{
+                                    Toast.makeText(getBaseContext(),"No network connectivity!",Toast.LENGTH_LONG).show();
+                                }
                             }
 
                         }
@@ -339,26 +353,25 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
         String userIdsStr = getIdsStr(startIndex,endIndex,idsList);
 
         if(!userIdsStr.isEmpty()) {
-            pb.setVisibility(View.VISIBLE);
+            showOrHideProgressBar(pb,View.VISIBLE);
 
             twitterApiClient.getUsersLookupCustomService().get(userIdsStr,false).enqueue(new Callback<ResponseBody>() {
 
                 @Override
-                public void success(Result<ResponseBody> result) {
+                public void success(final Result<ResponseBody> result) {
 
                     String resultString = getResultString(result);
 
-                    if(loadUserItemsIntoAdapter(resultString,recyclerAdapter)){
+                    loadUserItemsIntoAdapter(resultString,recyclerAdapter);
 
-                        if(getIntent().getStringExtra(LIST_NAME).equals(NEW_UNFOLLOWERS)) {
-                            ArrayList<Long> suspendedUserIds = getSuspendedUserIds();
-                            if (suspendedUserIds.size() > 0) addSuspendedUsers(suspendedUserIds);
-                        }
-
-                        ++page_number;
-                        isLoading = true;
-                        pb.setVisibility(View.GONE);
+                    if(getIntent().getStringExtra(LIST_NAME).equals(NEW_UNFOLLOWERS)) {
+                        ArrayList<Long> suspendedUserIds = getSuspendedUserIds();
+                        if (suspendedUserIds.size() > 0) addSuspendedUsers(suspendedUserIds);
                     }
+                    ++page_number;
+                    isLoading = true;
+                    showOrHideProgressBar(pb,View.GONE);
+                    //pb.setVisibility(View.GONE);
 
                 }
 
@@ -371,7 +384,8 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
                             ArrayList<Long> suspendedUserIds = getSuspendedUserIds();
                             // add each item to indicate a disabled user
                             addSuspendedUsers(suspendedUserIds);
-                            pb.setVisibility(View.GONE);
+                            showOrHideProgressBar(pb,View.GONE);
+                            //pb.setVisibility(View.GONE);
                         }
 
                     }else{
@@ -379,7 +393,8 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
                         Toast.makeText(UsersListActivity.this,exception.getMessage(),Toast.LENGTH_SHORT).show();
                         exception.printStackTrace();
                         isLoading = true;
-                        pb.setVisibility(View.GONE);
+                        showOrHideProgressBar(pb,View.GONE);
+                        //pb.setVisibility(View.GONE);
                     }
                 }
 
@@ -396,6 +411,15 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
 
         }
 
+    }
+
+    private void showOrHideProgressBar(final ProgressBar pb, final int visibility) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                pb.setVisibility(visibility);
+            }
+        });
     }
 
     private ArrayList<Long> getSuspendedUserIds() {

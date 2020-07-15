@@ -17,6 +17,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Process;
 import android.os.StrictMode;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -103,24 +104,28 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onCreate(savedInstanceState);
 
         MobileAds.initialize(this);
-
         setContentView(R.layout.navigation_drawer);
 
         // load shardPrefs manager
         sp = PreferenceManager.getDefaultSharedPreferences(this);
-
         /*
         if(BuildConfig.DEBUG) {
             StrictMode.ThreadPolicy threadPolicy = new StrictMode.ThreadPolicy.Builder().detectNetwork().detectDiskReads().detectDiskWrites().penaltyLog().penaltyFlashScreen().build();
             StrictMode.setThreadPolicy(threadPolicy);
-            StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().detectActivityLeaks().detectLeakedClosableObjects().penaltyLog().build());
+            StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().detectActivityLeaks().detectLeakedClosableObjects().penaltyLog().penaltyDropBox().build());
         }
 
          */
 
-        // load settings (preferences) using AsyncTask
-        //new LoadSettingsTask().execute();
-        loadSharedPrefs();
+        // load settings (preferences) using separate thread
+        new Thread(new Runnable(){
+            @Override
+            public void run() {
+                android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
+                loadSharedPrefs();
+            }
+        }).start();
+
 
         // Get active twitter session
         activeSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
@@ -134,7 +139,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             // Sign in to firebase with twitter session if there is no active firebase session
             FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
             if(firebaseUser == null) {
-                signIntoFirebaseUsingTwitter(activeSession);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
+                        signIntoFirebaseUsingTwitter(activeSession);
+                    }
+                }).start();
+
             }else{
                 getWhitelistedIds();
             }
@@ -282,6 +294,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         newFollowersIdsList.clear();
         newUnfollowersIdsList.clear();
         lastSavedFollowersIdsList.clear();
+
+        followersCountTv.setText("...");
+        followingCountTv.setText("...");
+        newFollowersBtn.setText("New Followers (...)");
+        newUnfollowersBtn.setText("New Unfollowers (...)");
+        nonFollowersBtn.setText("Non Followers (...)");
+        fansBtn.setText("Fans (...)");
+        mutualFollowersBtn.setText("Mutual Followers (...)");
     }
 
     private void loadTwitterData(final long userId) {
@@ -362,9 +382,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void getWhitelistedIds() {
         setWhitelistButtonText();
-        FirebaseDatabase fbDb = FirebaseDatabase.getInstance(DATABASE_URL);
+
         // get whitelisted users count and ids
-        DatabaseReference dbRef = fbDb.getReference().child("whitelist/" + activeSession.getUserId());
+        DatabaseReference dbRef = FirebaseUtil.openDbReference("whitelist/" + activeSession.getUserId());
 
         dbRef.addChildEventListener(new ChildEventListener() {
             @Override
@@ -401,14 +421,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void setWhitelistButtonText() {
-        String whitelistedUsersText = "Whitelisted Users (" + insertCommas(whitelistedIdsList.size()) + ")";
-        whitelistedUsersBtn.setText(whitelistedUsersText);
-        if(!isLoading){
-            nonFollowersIdsList.removeAll(whitelistedIdsList);
-            nonFollowersIdsList.trimToSize();
-            String nonFollowersBtnTxt = "Non-Followers ("+nonFollowersIdsList.size()+")";
-            nonFollowersBtn.setText(nonFollowersBtnTxt);
-        }
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                String whitelistedUsersText = "Whitelisted Users (" + insertCommas(whitelistedIdsList.size()) + ")";
+                whitelistedUsersBtn.setText(whitelistedUsersText);
+                if(!isLoading){
+                    nonFollowersIdsList.removeAll(whitelistedIdsList);
+                    nonFollowersIdsList.trimToSize();
+                    String nonFollowersBtnTxt = "Non-Followers ("+nonFollowersIdsList.size()+")";
+                    nonFollowersBtn.setText(nonFollowersBtnTxt);
+                }
+            }
+        });
     }
 
 
@@ -424,7 +449,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 if(listAndCursorObject.next_cursor == 0) {
 
                     // get those users who have unfollowed the currentUser, making use of weak reference
-                    new WeakReference<>(new FollowersAsyncTask()).get().execute();
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
+                            getNewUnfollowersAndFollowers();
+                        }
+                    }).start();
 
                     // means we have gotten to the last page
                     if (followersIdsList.size() > 0 && friendsIdsList.size() > 0 && !isFollowersAndFriendsListReady && hasFinishedBackgroundTask) {
@@ -504,51 +535,31 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
     }
 
-    class FollowersAsyncTask extends AsyncTask<Void, Void,Void>{
+    private void saveFollowersIdsToFile() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
+                try {
 
-        @Override
-        protected Void doInBackground(Void... voids) {
-            getNewUnfollowersAndFollowers();
-            return null;
-        }
+                    if(!followersIdsFile.exists()){
+                        followersIdsFile.createNewFile();
+                    }
 
-    }
+                    FileOutputStream fileOutputStream = new FileOutputStream(followersIdsFile);
+                    ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
 
-    static class SaveFollowersIdsTask extends AsyncTask<Void,Void,Void>{
-        @Override
-        protected Void doInBackground(Void... voids) {
-            saveFollowersIdsToFile();
-            return null;
-        }
-    }
+                    objectOutputStream.writeObject(followersIdsList);
 
-    static class LoadSettingsTask extends AsyncTask<Void,Void,Void>{
-        @Override
-        protected Void doInBackground(Void... voids) {
-            //loadSharedPrefs();
-            return null;
-        }
-    }
+                    fileOutputStream.close();
+                    objectOutputStream.close();
 
-    private static void saveFollowersIdsToFile() {
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
-        try {
-
-            if(!followersIdsFile.exists()){
-                followersIdsFile.createNewFile();
             }
-
-            FileOutputStream fileOutputStream = new FileOutputStream(followersIdsFile);
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-
-            objectOutputStream.writeObject(followersIdsList);
-
-            fileOutputStream.close();
-            objectOutputStream.close();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        }).start();
 
     }
 
@@ -622,7 +633,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             // Add the new followers ids to last save followers ids and save it to file
             if(newFollowersIdsList.size() > 0 || newUnfollowersIdsList.size() > 0){
-                new SaveFollowersIdsTask().execute();
+                saveFollowersIdsToFile();
             }
 
             mutualFriendsCount = mutualFriendsIdsList.size();

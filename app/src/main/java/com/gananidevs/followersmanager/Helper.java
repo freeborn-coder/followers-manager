@@ -313,7 +313,6 @@ public class Helper {
                         idsStr.append(list.get(i)).append(",");
                     }
                 }
-
             }
         }catch(Exception e){
             e.printStackTrace();

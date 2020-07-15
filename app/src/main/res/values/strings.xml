@@ -87,4 +87,5 @@
     <string name="rate_app_request_msg">If you are enjoying this app, please take a minute of your time to give us a 5 star rating.</string>
     <string name="new_version_dialog_message">New version available. Please update app to enjoy the latest features</string>
     <string name="proceed">proceed</string>
+    <string name="sign_in_to_continue">Sign in to continue</string>
 </resources>
