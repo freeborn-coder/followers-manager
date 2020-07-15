@@ -6,8 +6,6 @@
     <string name="app_functions_text">Take better control of your twitter audience, see who unfollows you, who you do not follow, and more.</string>
     <string name="login_with_twitter">Login with Twitter</string>
     <string name="welcome">Welcome</string>
-    <string name="API_KEY">Uh17KtEpyab0nVuBi1ZEmCXmO</string>
-    <string name="API_SECRET">ONtsQ8qCEbULwPjTLbLn2u6LJaDijFx5QW6szOStwwf67m6upF</string>
     <string name="new_followers_btn_default_text">New Followers (..)</string>
     <string name="new_unfollowers_btn_default_text">New Unfollowers (..)</string>
     <string name="non_followers_btn_default_text">Non-Followers (..)</string>
