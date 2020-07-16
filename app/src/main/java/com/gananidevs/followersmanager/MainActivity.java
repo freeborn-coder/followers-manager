@@ -730,9 +730,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     startActivity(intent);
                     break;
                 case R.id.new_unfollowers_btn:
-                    /*newUnfollowersIdsList.add(93346325870731056L);
+                    /*
+                    newUnfollowersIdsList.add(93346325870731056L);
                     newUnfollowersIdsList.add(749137505340833284L);
-                    newUnfollowersIdsList.add(749137505340833284L);*/
+                    newUnfollowersIdsList.add(749137505340833284L);
+                    newUnfollowersIdsList.add(1050272786944389120L);
+                    newUnfollowersIdsList.add(1219744441176592386L);
+                    newUnfollowersIdsList.add(4819204047L);*/
                     if(newUnfollowersIdsList.size() > 0) {
                         intent = new Intent(MainActivity.this, UsersListActivity.class);
                         intent.putExtra(LIST_NAME, NEW_UNFOLLOWERS);
