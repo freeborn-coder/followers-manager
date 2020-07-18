@@ -3,11 +3,14 @@ package com.gananidevs.followersmanager;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -126,10 +129,8 @@ public class WelcomeScreenActivity extends AppCompatActivity {
                     initializeTwitter();
                 }else{
                     progressBar.setVisibility(View.GONE);
-                    if(BuildConfig.DEBUG){
-                        Objects.requireNonNull(task.getException()).printStackTrace();
-                        Toast.makeText(WelcomeScreenActivity.this,task.getException().getMessage(),Toast.LENGTH_LONG).show();
-                    }
+                    Objects.requireNonNull(task.getException()).printStackTrace();
+                    Toast.makeText(WelcomeScreenActivity.this,task.getException().getMessage(),Toast.LENGTH_LONG).show();
                 }
 
             }
@@ -204,11 +205,6 @@ public class WelcomeScreenActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-    }
-
     private void goToMainActivity() {
 
         Toast.makeText(WelcomeScreenActivity.this, "You are logged in", Toast.LENGTH_LONG).show();
@@ -223,6 +219,7 @@ public class WelcomeScreenActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
         if(latestAppVersionCode > currentAppVersionCode){
             askUserToUpdateApp();
         }else if(apiSecretKey != null && apiKey != null){

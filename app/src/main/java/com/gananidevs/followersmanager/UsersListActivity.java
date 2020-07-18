@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Process;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -22,6 +23,8 @@ import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.RequestConfiguration;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.TwitterCore;
@@ -32,6 +35,8 @@ import java.lang.ref.WeakReference;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import okhttp3.ResponseBody;
 
@@ -163,13 +168,18 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
             @Override
             public void onAdClosed() {
                 super.onAdClosed();
-                adView.loadAd(new AdRequest.Builder().build());
+                //adView.loadAd(new AdRequest.Builder().build());
             }
 
             @Override
             public void onAdFailedToLoad(int i) {
                 super.onAdFailedToLoad(i);
-                if(isNetworkConnected(UsersListActivity.this)) adView.loadAd(new AdRequest.Builder().build());
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(isNetworkConnected(UsersListActivity.this)) adView.loadAd(MainActivity.adRequest);
+                    }
+                },AD_RELOAD_DELAY);
             }
 
             @Override
@@ -182,7 +192,7 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
 
         mInterstitialAd = new InterstitialAd(this);
         mInterstitialAd.setAdUnitId(getString(R.string.interstitial_ad_unit_id));
-        mInterstitialAd.loadAd(new AdRequest.Builder().build());
+        mInterstitialAd.loadAd(MainActivity.adRequest);
 
         mInterstitialAd.setAdListener(new AdListener() {
             @Override
@@ -194,12 +204,16 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
             @Override
             public void onAdFailedToLoad(int i) {
                 super.onAdFailedToLoad(i);
-                if(isNetworkConnected(UsersListActivity.this)) mInterstitialAd.loadAd(new AdRequest.Builder().build());
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(isNetworkConnected(UsersListActivity.this)) mInterstitialAd.loadAd(MainActivity.adRequest);
+                    }
+                },AD_RELOAD_DELAY);
+
             }
         });
-
-        adView.loadAd(new AdRequest.Builder().build());
-
+        adView.loadAd(MainActivity.adRequest);
     }
 
     private void chooseList() {
@@ -522,5 +536,15 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
             searchView.requestFocus();
         }
         super.onStart();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if(MainActivity.isShowingAds && !mInterstitialAd.isLoaded()){
+            if(isNetworkConnected(this)){
+                mInterstitialAd.loadAd(MainActivity.adRequest);
+            }
+        }
     }
 }

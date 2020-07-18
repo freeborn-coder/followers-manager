@@ -1,9 +1,12 @@
 package com.gananidevs.followersmanager;
 
+import android.Manifest;
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.Uri;
@@ -14,6 +17,9 @@ import android.widget.ProgressBar;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
@@ -38,6 +44,8 @@ public class Helper {
     public static final int ONE_DAY_IN_MILLISECONDS = 1000 * 60 * 60 * 24;
     static final int ONE_DAY_IN_SECONDS = 60 * 60 * 24;
 
+    static String TECNO_LB7_TEST_ID = "71346B0C1951E4CFD3A0C08DD218BB76";
+
     // for ads removal
     static final String ADS_REMOVAL_ACTIVE = "user purchased ads removal";
     static final String ADS_REMOVAL_EXPIRY_DATE = "ads removal expiry date";
@@ -45,6 +53,7 @@ public class Helper {
     static final String USERS_PARCELABLE_ARRAYLIST = "users parcelable arraylist";
     static final String CURRENT_USER_INDEX = "current user index";
 
+    public static long AD_RELOAD_DELAY = 3000;
 
     static final String DATABASE_URL = "https://followers-manager-for-twitter.firebaseio.com/";
 
@@ -87,6 +96,13 @@ public class Helper {
     private static final int MAX_REQUEST_COUNT = 15;
     static final String REQUEST_COUNT_KEY = "currentRequestCount";
     static final String LAST_TIMESTAMP_KEY = "last15minuteTimestamp";
+
+    public static void checkLocationPermission(Context context) {
+        if(ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+            ((AppCompatActivity)context).requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},110);
+
+        }
+    }
 
     static boolean proceedWithApiCall(Long interval){
         if(interval > FIFTEEN_MINUTES){

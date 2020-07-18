@@ -42,6 +42,8 @@ import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdLoader;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.RequestConfiguration;
 import com.google.android.gms.ads.formats.MediaView;
 import com.google.android.gms.ads.formats.UnifiedNativeAd;
 import com.google.android.gms.ads.formats.UnifiedNativeAdView;
@@ -58,15 +60,20 @@ import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 import okhttp3.ResponseBody;
 
+import static com.gananidevs.followersmanager.Helper.AD_RELOAD_DELAY;
 import static com.gananidevs.followersmanager.Helper.A_USERS_FOLLOWERS;
 import static com.gananidevs.followersmanager.Helper.A_USERS_FOLLOWING;
 import static com.gananidevs.followersmanager.Helper.CURRENT_USER_INDEX;
 import static com.gananidevs.followersmanager.Helper.LIST_NAME;
 import static com.gananidevs.followersmanager.Helper.SCREEN_NAME_OF_USER;
+import static com.gananidevs.followersmanager.Helper.TECNO_LB7_TEST_ID;
 import static com.gananidevs.followersmanager.Helper.USERS_PARCELABLE_ARRAYLIST;
 import static com.gananidevs.followersmanager.Helper.USER_ID;
 import static com.gananidevs.followersmanager.Helper.changeButtonTextAndColor;
@@ -107,6 +114,7 @@ public class UserProfileActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private DatabaseReference databaseReference;
     private AdLoader adLoader;
+    private AdRequest adRequest;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -585,6 +593,7 @@ public class UserProfileActivity extends AppCompatActivity {
     }
 
     private void loadAds() {
+        adRequest = MainActivity.adRequest;
         adLoader = new AdLoader.Builder(this,getString(R.string.native_ad_unit_id))
                 .forUnifiedNativeAd(new UnifiedNativeAd.OnUnifiedNativeAdLoadedListener() {
                     @Override
@@ -609,18 +618,21 @@ public class UserProfileActivity extends AppCompatActivity {
                     @Override
                     public void onAdFailedToLoad(int i) {
                         super.onAdFailedToLoad(i);
-                        if(isNetworkConnected(UserProfileActivity.this))
-                            adLoader.loadAd(new AdRequest.Builder().build());
 
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                if(isNetworkConnected(UserProfileActivity.this))adLoader.loadAd(adRequest);
+                            }
+                        },AD_RELOAD_DELAY);
                     }
                 })
                 .build();
 
-        adLoader.loadAd(new AdRequest.Builder().build());
+        adLoader.loadAd(adRequest);
 
         mInterstitialAd = new InterstitialAd(this);
         mInterstitialAd.setAdUnitId(getString(R.string.interstitial_ad_unit_id));
-        mInterstitialAd.loadAd(new AdRequest.Builder().build());
 
         mInterstitialAd.setAdListener(new AdListener() {
             @Override
@@ -632,9 +644,17 @@ public class UserProfileActivity extends AppCompatActivity {
             @Override
             public void onAdFailedToLoad(int i) {
                 super.onAdFailedToLoad(i);
-                if(isNetworkConnected(UserProfileActivity.this)) mInterstitialAd.loadAd(new AdRequest.Builder().build());
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(isNetworkConnected(UserProfileActivity.this)) mInterstitialAd.loadAd(adRequest);
+                    }
+                },AD_RELOAD_DELAY);
+
             }
         });
+
+        mInterstitialAd.loadAd(adRequest);
 
     }
 
@@ -914,7 +934,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
                     whitelistStatusTv.setVisibility(View.VISIBLE);
                 }else{
-                    Toast.makeText(UserProfileActivity.this,task.getException().getMessage(),Toast.LENGTH_SHORT).show();
+                    Toast.makeText(UserProfileActivity.this, Objects.requireNonNull(task.getException()).getMessage(),Toast.LENGTH_SHORT).show();
                 }
 
                 progressBar.setVisibility(View.GONE);
@@ -928,7 +948,7 @@ public class UserProfileActivity extends AppCompatActivity {
         super.onResume();
         if(MainActivity.isShowingAds && !mInterstitialAd.isLoaded()){
             if(isNetworkConnected(this)){
-                mInterstitialAd.loadAd(new AdRequest.Builder().build());
+                mInterstitialAd.loadAd(adRequest);
             }
         }
     }

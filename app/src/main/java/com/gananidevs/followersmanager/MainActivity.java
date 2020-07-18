@@ -20,6 +20,7 @@ import android.os.Handler;
 import android.os.Process;
 import android.os.StrictMode;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -32,7 +33,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.RequestConfiguration;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.navigation.NavigationView;
@@ -62,6 +65,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 
@@ -98,12 +103,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     DrawerLayout drawerLayout;
     NavigationView navigationView;
     androidx.appcompat.widget.Toolbar toolbar;
+    public static AdRequest adRequest;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         MobileAds.initialize(this);
+        if(BuildConfig.DEBUG){
+            List<String> testDeviceIds = Arrays.asList(TECNO_LB7_TEST_ID);
+            RequestConfiguration configuration = new RequestConfiguration.Builder().setTestDeviceIds(testDeviceIds).build();
+            MobileAds.setRequestConfiguration(configuration);
+            adRequest = new AdRequest.Builder().addTestDevice(TECNO_LB7_TEST_ID).build();
+        }else{
+            adRequest = new AdRequest.Builder().build();
+        }
+
         setContentView(R.layout.navigation_drawer);
 
         // load shardPrefs manager
@@ -459,7 +474,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     // means we have gotten to the last page
                     if (followersIdsList.size() > 0 && friendsIdsList.size() > 0 && !isFollowersAndFriendsListReady && hasFinishedBackgroundTask) {
-                        Toast.makeText(MainActivity.this,"Loaded from followers ids method",Toast.LENGTH_LONG).show();
+                        //Toast.makeText(MainActivity.this,"Loaded from followers ids method",Toast.LENGTH_LONG).show();
                         isFollowersAndFriendsListReady = true;
                         getAndLoadCounts();
 
