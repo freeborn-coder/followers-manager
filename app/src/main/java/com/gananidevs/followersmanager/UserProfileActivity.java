@@ -6,6 +6,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
+import androidx.viewpager.widget.ViewPager;
 
 import android.Manifest;
 import android.animation.Animator;
@@ -115,6 +116,8 @@ public class UserProfileActivity extends AppCompatActivity {
     private DatabaseReference databaseReference;
     private AdLoader adLoader;
     private AdRequest adRequest;
+    private ProfilePagerAdapter profilePagerAdapter;
+    private ViewPager viewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -136,7 +139,13 @@ public class UserProfileActivity extends AppCompatActivity {
         userItemArrayList = getIntent().getParcelableArrayListExtra(USERS_PARCELABLE_ARRAYLIST);
         currentUserIndex = getIntent().getIntExtra(CURRENT_USER_INDEX,0);
         currentItem = userItemArrayList.get(currentUserIndex);
-        loadDataIntoViews(currentItem);
+
+        viewPager = findViewById(R.id.view_pager);
+        profilePagerAdapter = new ProfilePagerAdapter(getSupportFragmentManager(),userItemArrayList);
+        viewPager.setAdapter(profilePagerAdapter);
+        viewPager.setCurrentItem(currentUserIndex);
+        viewPager.setPageMargin(10);
+        //loadDataIntoViews(currentItem);
 
     }
 
@@ -334,28 +343,6 @@ public class UserProfileActivity extends AppCompatActivity {
                         confirmDialog.setContentView(dialogView);
                         confirmDialog.show();
 
-                        /*
-                        // unfollow the specified user
-                        new AlertDialog.Builder(UserProfileActivity.this).setTitle("confirm action")
-                                .setMessage(getString(R.string.unfollow_all_lowercase) + " " + userScreenName + "?")
-                                .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        showProgressHideButtonText(btnProgressBar, followUnfollowBtn, UserProfileActivity.this);
-
-                                        int delay = new Random().nextInt(1000) + 1000;
-                                        new Handler().postDelayed(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                unfollowUser(userId);
-                                            }
-                                        }, delay);
-
-                                    }
-                                }).setNegativeButton(getString(R.string.cancel), null)
-                                .show();
-
-                         */
                     }
 
                 }else{ // Request count is >= 15 within 15 minutes, so do not proceed with request
@@ -734,90 +721,11 @@ public class UserProfileActivity extends AppCompatActivity {
         int itemId = item.getItemId();
 
         if(itemId == R.id.action_previous){
-            // move to the previous useritem in the list
-            if(currentUserIndex > 0) {
-                --currentUserIndex;
-                currentItem = userItemArrayList.get(currentUserIndex);
-
-                constraintLayout.animate().alpha(0f).setDuration(1000).setListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        super.onAnimationEnd(animation);
-                        constraintLayout.animate().alpha(1).setDuration(1000).setStartDelay(ANIM_START_DELAY).setListener(new Animator.AnimatorListener() {
-                            @Override
-                            public void onAnimationStart(Animator animation) {
-                                loadDataIntoViews(currentItem);
-                            }
-
-                            @Override
-                            public void onAnimationEnd(Animator animation) {
-
-                            }
-
-                            @Override
-                            public void onAnimationCancel(Animator animation) {
-
-                            }
-
-                            @Override
-                            public void onAnimationRepeat(Animator animation) {
-
-                            }
-                        });
-                    }
-                });
-
-            }else{
-                // we have gotten to the end of the list, can't go any further
-                Toast.makeText(this,getString(R.string.end_reached),Toast.LENGTH_SHORT).show();
-            }
+            viewPager.setCurrentItem(viewPager.getCurrentItem()-1);
 
         }else if(itemId == R.id.action_next){
+            viewPager.setCurrentItem(viewPager.getCurrentItem()+1);
 
-            if(currentUserIndex < userItemArrayList.size()-1) {
-                // move to the next item in the list, if there is any
-                ++currentUserIndex;
-                currentItem = userItemArrayList.get(currentUserIndex);
-
-                if(!currentItem.isSuspendedUser) {
-
-                    constraintLayout.animate().alpha(0f).setDuration(1000).setListener(new AnimatorListenerAdapter() {
-                        @Override
-                        public void onAnimationEnd(Animator animation) {
-                            super.onAnimationEnd(animation);
-                            constraintLayout.animate().alpha(1).setDuration(1000).setStartDelay(ANIM_START_DELAY).setListener(new Animator.AnimatorListener() {
-                                @Override
-                                public void onAnimationStart(Animator animation) {
-                                    loadDataIntoViews(currentItem);
-                                }
-
-                                @Override
-                                public void onAnimationEnd(Animator animation) {
-
-                                }
-
-                                @Override
-                                public void onAnimationCancel(Animator animation) {
-
-                                }
-
-                                @Override
-                                public void onAnimationRepeat(Animator animation) {
-
-                                }
-                            });
-                        }
-                    });
-
-                }else{
-                    --currentUserIndex;
-                    Toast.makeText(this, getString(R.string.end_reached), Toast.LENGTH_SHORT).show();
-                }
-
-            }else {
-                // we have gotten to the end of the list, can't go any further
-                Toast.makeText(this, getString(R.string.end_reached), Toast.LENGTH_SHORT).show();
-            }
         }else if(item.getItemId() == android.R.id.home){
             onBackPressed();
         }
