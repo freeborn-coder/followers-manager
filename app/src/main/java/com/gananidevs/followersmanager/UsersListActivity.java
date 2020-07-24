@@ -458,7 +458,7 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        String listName = getIntent().getStringExtra(LIST_NAME);
+        //String listName = getIntent().getStringExtra(LIST_NAME);
 
         if(item.getItemId() == android.R.id.home){
             onBackPressed();

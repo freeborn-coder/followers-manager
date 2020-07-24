@@ -464,7 +464,6 @@ public class UserProfileActivity extends AppCompatActivity {
     }
 
 
-
     private void saveImage(Bitmap bitmap, String title, String description) {
         try {
             if (MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, title, description) != null) {

@@ -179,28 +179,6 @@ public class Helper {
         confirmDialog.setContentView(dialogView);
         confirmDialog.show();
 
-        /*
-        new AlertDialog.Builder(context).setMessage("If you are enjoying this app, please take a minute of your time to give us a 5 star rating.")
-            .setPositiveButton("ok", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    MainActivity.remindUserToRateApp = false;
-                    MainActivity.sp.edit().putBoolean(REMIND_USER_TO_RATE_APP,false).apply();
-                    goToAppStore(context);
-
-                }
-            })
-            .setNegativeButton("later",null)
-            .setNeutralButton("Never", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    MainActivity.remindUserToRateApp = false;
-                    MainActivity.sp.edit().putBoolean(REMIND_USER_TO_RATE_APP,false).apply();
-                }
-            })
-            .show();
-
-         */
     }
 
     static void goToAppStore(Context context) {
