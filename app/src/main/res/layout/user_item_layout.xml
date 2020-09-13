@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginStart="8dp"
+    android:layout_marginStart="5dp"
     android:layout_marginBottom="8dp"
-    android:layout_marginEnd="10dp">
+    android:background="@color/colorPrimary"
+
+    android:layout_marginTop="20dp"
+    android:layout_marginEnd="6dp">
 
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:cardCornerRadius="20dp"
         app:cardElevation="4dp"
-        app:strokeWidth="2dp"
-        app:cardBackgroundColor="@color/transparent_white"
-        app:strokeColor="@color/tw__solid_white"
-        android:layout_marginTop="20dp">
+        app:contentPaddingBottom="10dp"
+        app:cardBackgroundColor="@color/transparent_white">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingStart="5dp"
-        android:paddingBottom="5dp"
-        android:paddingEnd="10dp">
+        android:paddingEnd="5dp">
 
         <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/profile_image"
@@ -40,7 +40,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/user_item_text_margin_start"
-            android:layout_marginBottom="2dp"
             android:ellipsize="end"
             android:maxLength="20"
             android:singleLine="true"
@@ -49,10 +48,11 @@
             android:textColor="#111111"
             android:textSize="16sp"
             android:textStyle="bold"
+            android:layout_marginBottom="6dp"
             app:layout_constraintEnd_toStartOf="@id/dropDownArrow"
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toEndOf="@id/profile_image"
-            app:layout_constraintTop_toTopOf="@id/profile_image" />
+            app:layout_constraintBottom_toTopOf="@id/screen_name_tv" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/screen_name_tv"
@@ -81,26 +81,24 @@
             app:layout_constraintStart_toEndOf="@+id/name_tv"
             app:layout_constraintTop_toTopOf="@id/name_tv"
             app:layout_constraintBottom_toBottomOf="@id/name_tv"
-            android:tint="@color/tw__solid_white"
-            android:visibility="gone"/>
+            android:visibility="gone"
+            app:tint="@color/tw__solid_white" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/follow_status_button"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="35dp"
             android:layout_marginStart="@dimen/user_item_text_margin_start"
-            android:paddingStart="5dp"
-            android:paddingTop="2dp"
-            android:paddingEnd="5dp"
-            android:paddingBottom="3dp"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
             android:text="@string/doesnt_follow_you"
             android:textAlignment="center"
-            android:textAppearance="@style/TextAppearance.AppCompat.Body1"
             android:textColor="@android:color/white"
-            android:textSize="9sp"
+            android:textSize="10sp"
             android:textStyle="normal"
-            app:cornerRadius="5dp"
+            app:cornerRadius="10dp"
             android:layout_marginTop="5dp"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
             android:backgroundTint="@color/main_activity_low_emphasis_text_color"
             app:layout_constraintTop_toBottomOf="@id/screen_name_tv"
             app:layout_constraintStart_toEndOf="@+id/profile_image" />
@@ -131,17 +129,17 @@
                 android:id="@+id/follow_unfollow_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingStart="9dp"
+                android:paddingStart="11dp"
                 android:paddingTop="3dp"
-                android:paddingEnd="8dp"
+                android:paddingEnd="11dp"
                 android:paddingBottom="5dp"
                 android:text="@string/unfollow_all_lowercase"
                 android:textAlignment="center"
-                android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
                 android:textColor="@color/tw__solid_white"
                 android:textStyle="bold"
                 android:elevation="3dp"
-                app:cornerRadius="10dp" />
+                app:cornerRadius="20dp" />
 
             <ProgressBar
                 android:id="@+id/btn_progress_bar"
@@ -164,7 +162,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/follow_unf_btn_container"
             app:layout_constraintTop_toTopOf="parent"
-            android:tint="@color/dark_4444"
+            app:tint="@color/dark_4444"
             android:visibility="gone"
             app:srcCompat="@drawable/ic_arrow_drop_down_black_24dp" />
 
@@ -172,4 +170,4 @@
 
     </com.google.android.material.card.MaterialCardView>
 
-</RelativeLayout>
+</LinearLayout>

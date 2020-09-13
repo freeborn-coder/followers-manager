@@ -179,7 +179,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }else{
             startActivity(new Intent(this, WelcomeScreenActivity.class));
             finish();
-            overridePendingTransition(android.R.anim.slide_in_left,android.R.anim.slide_out_right);
         }
 
     }
@@ -308,7 +307,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         intent.putParcelableArrayListExtra(USERS_PARCELABLE_ARRAYLIST,userItemsArrayList);
         intent.putExtra(CURRENT_USER_INDEX,0);
         startActivity(intent);
-        overridePendingTransition(android.R.anim.slide_in_left,android.R.anim.slide_out_right);
+        
     }
 
     private void clearLists(){
@@ -709,8 +708,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if(nonFollowersIdsList.size() > 0) {
                         intent = new Intent(MainActivity.this, UsersListActivity.class);
                         intent.putExtra(LIST_NAME, NON_FOLLOWERS);
-                        startActivity(intent);
-                        overridePendingTransition(android.R.anim.slide_in_left,android.R.anim.slide_out_right);
+                        startActivityWithAnimation(intent);
+                        
                     }else{
                         showEmptyListToast(getString(R.string.nothing_to_view));
                     }
@@ -719,8 +718,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if(mutualFriendsIdsList.size() > 0) {
                         intent = new Intent(MainActivity.this, UsersListActivity.class);
                         intent.putExtra(LIST_NAME, MUTUAL_FOLLOWERS);
-                        startActivity(intent);
-                        overridePendingTransition(android.R.anim.slide_in_left,android.R.anim.slide_out_right);
+                        startActivityWithAnimation(intent);
+                        
                     }else{
                         showEmptyListToast(getString(R.string.nothing_to_view));
                     }
@@ -729,8 +728,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if(fansIdsList.size() > 0) {
                         intent = new Intent(MainActivity.this, UsersListActivity.class);
                         intent.putExtra(LIST_NAME, FANS);
-                        startActivity(intent);
-                        overridePendingTransition(android.R.anim.slide_in_left,android.R.anim.slide_out_right);
+                        startActivityWithAnimation(intent);
+                        
                     }else{
                         showEmptyListToast(getString(R.string.nothing_to_view));
                     }
@@ -739,8 +738,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if(newFollowersIdsList.size() > 0) {
                         intent = new Intent(MainActivity.this, UsersListActivity.class);
                         intent.putExtra(LIST_NAME, NEW_FOLLOWERS);
-                        startActivity(intent);
-                        overridePendingTransition(android.R.anim.slide_in_left,android.R.anim.slide_out_right);
+                        startActivityWithAnimation(intent);
+                        
                     }else{
                         showEmptyListToast(getString(R.string.nothing_to_view));
                     }
@@ -749,7 +748,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if(whitelistedIdsList.size() > 0) {
                         intent = new Intent(MainActivity.this, UsersListActivity.class);
                         intent.putExtra(LIST_NAME, WHITELISTED_USERS);
-                        startActivity(intent);
+                        startActivityWithAnimation(intent);
                     }else{
                         showEmptyListToast(getString(R.string.nothing_to_view));
                     }
@@ -758,8 +757,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     // open users list activity to search for users
                     intent = new Intent(MainActivity.this, UsersListActivity.class);
                     intent.putExtra(LIST_NAME, SEARCH_USERS);
-                    startActivity(intent);
-                    overridePendingTransition(android.R.anim.slide_in_left,android.R.anim.slide_out_right);
+                    startActivityWithAnimation(intent);
+                    
                     break;
                 case R.id.new_unfollowers_btn:
                     /*
@@ -772,8 +771,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if(newUnfollowersIdsList.size() > 0) {
                         intent = new Intent(MainActivity.this, UsersListActivity.class);
                         intent.putExtra(LIST_NAME, NEW_UNFOLLOWERS);
-                        startActivity(intent);
-                        overridePendingTransition(android.R.anim.slide_in_left,android.R.anim.slide_out_right);
+                        startActivityWithAnimation(intent);
+                        
                     }else{
                         showEmptyListToast(getString(R.string.nothing_to_view));
                     }
@@ -797,8 +796,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void viewUsers(String followersOrFollowing) {
         Intent intent = new Intent(this, UsersListActivity.class);
         intent.putExtra(LIST_NAME,followersOrFollowing);
-        startActivity(intent);
-        overridePendingTransition(android.R.anim.slide_in_left,android.R.anim.slide_out_right);
+        startActivityWithAnimation(intent);
+        
     }
 
 
@@ -837,7 +836,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onClick(View v) {
                 confirmDialog.dismiss();
                 finish();
-                overridePendingTransition(android.R.anim.slide_in_left,android.R.anim.slide_out_right);
+                
             }
         });
 
@@ -853,6 +852,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         confirmDialog.show();
 
     }
+
+    private void startActivityWithAnimation(Intent intent){
+        startActivity(intent);
+        overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out);
+    }
+
+
 
     @Override
     protected void onResume() {
@@ -873,7 +879,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             case R.id.action_remove_ads:{
                 startActivity(new Intent(this,RemoveAdsActivity.class));
-                overridePendingTransition(android.R.anim.slide_in_left,android.R.anim.slide_out_right);
+                
                 return true;
             }
             case R.id.action_share_app:{
@@ -896,7 +902,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         shareIntent.putExtra(Intent.EXTRA_SUBJECT, R.string.app_share_intent_subject);
         shareIntent.putExtra(Intent.EXTRA_TEXT,"https://play.google.com/store/apps/details?id="+getPackageName());
         startActivity(Intent.createChooser(shareIntent, "Share via"));
-        overridePendingTransition(android.R.anim.slide_in_left,android.R.anim.slide_out_right);
+        
         drawerLayout.closeDrawer(GravityCompat.START);
     }
 
@@ -910,7 +916,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             FirebaseAuth.getInstance().signOut();
             startActivity(new Intent(this, WelcomeScreenActivity.class));
             finish();
-            overridePendingTransition(android.R.anim.slide_in_left,android.R.anim.slide_out_right);
+            
 
         }else{
             Toast.makeText(MainActivity.this,R.string.still_loading,Toast.LENGTH_SHORT).show();
@@ -927,10 +933,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
         try {
             startActivity(goToAppListing);
-            overridePendingTransition(android.R.anim.slide_in_left,android.R.anim.slide_out_right);
+            
         } catch (ActivityNotFoundException e) {
             startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse("http://play.google.com/store/apps/details?id=" + getPackageName())));
-            overridePendingTransition(android.R.anim.slide_in_left,android.R.anim.slide_out_right);
+            
         }
     }
 

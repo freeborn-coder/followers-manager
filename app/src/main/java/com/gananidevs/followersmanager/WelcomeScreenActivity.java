@@ -99,7 +99,7 @@ public class WelcomeScreenActivity extends AppCompatActivity {
                                     Toast.makeText(WelcomeScreenActivity.this, "log in successful", Toast.LENGTH_SHORT).show();
                                     startActivity(new Intent(WelcomeScreenActivity.this, MainActivity.class));
                                     finish();
-                                    overridePendingTransition(android.R.anim.slide_in_left,android.R.anim.slide_out_right);
+                                    overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out);
                                 }
 
                                 @Override

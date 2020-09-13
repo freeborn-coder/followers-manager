@@ -51,7 +51,7 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/name_tv">
 
-                    <Button
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/new_followers_btn"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -71,7 +71,7 @@
                         app:iconSize="20dp"
                         app:iconTint="@color/colorAccent" />
 
-                    <Button
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/new_unfollowers_btn"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -91,7 +91,7 @@
                         app:iconSize="20dp"
                         app:iconTint="@color/colorAccent" />
 
-                    <Button
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/non_followers_btn"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -111,7 +111,7 @@
                         app:iconSize="20dp"
                         app:iconTint="@color/colorAccent" />
 
-                    <androidx.appcompat.widget.AppCompatButton
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/fans_btn"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -131,7 +131,7 @@
                         app:iconSize="20dp"
                         app:iconTint="@color/colorAccent" />
 
-                    <Button
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/mutual_followers_btn"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -151,7 +151,7 @@
                         app:iconSize="20dp"
                         app:iconTint="@color/colorAccent" />
 
-                    <Button
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/whitelisted_users_btn"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -171,7 +171,7 @@
                         app:iconSize="20dp"
                         app:iconTint="@color/colorAccent" />
 
-                    <Button
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/search_users_btn"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
