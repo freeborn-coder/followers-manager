@@ -25,7 +25,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:cardBackgroundColor="@android:color/transparent"
                 app:cardCornerRadius="20dp"
-                app:strokeColor="@color/faded_white"
+                app:strokeColor="@color/transparent_white"
                 app:strokeWidth="2dp">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
@@ -91,20 +91,21 @@
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/follow_status_button"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="34dp"
                         android:backgroundTint="@color/mid_gray_777"
-                        android:paddingStart="5dp"
-                        android:paddingTop="2dp"
-                        android:paddingEnd="5dp"
-                        android:paddingBottom="3dp"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="9dp"
                         android:text="@string/doesnt_follow_you"
-                        android:textAlignment="center"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                        android:paddingStart="5dp"
+                        android:paddingEnd="5dp"
+                        android:paddingTop="0dp"
+                        android:paddingBottom="0dp"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
                         android:textColor="@android:color/white"
-                        android:textSize="9sp"
+                        android:textSize="10sp"
                         android:textStyle="normal"
-                        app:cornerRadius="5dp"
+                        android:enabled="false"
+                        android:clickable="false"
+                        app:cornerRadius="10dp"
                         app:layout_constraintStart_toStartOf="@id/screen_name_tv"
                         app:layout_constraintTop_toBottomOf="@id/screen_name_tv" />
 
@@ -241,7 +242,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/top_card_view"
-                app:strokeColor="@color/faded_white"
+                app:strokeColor="@color/transparent_white"
                 app:strokeWidth="2dp">
 
                 <LinearLayout

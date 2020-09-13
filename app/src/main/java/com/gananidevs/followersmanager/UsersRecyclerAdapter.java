@@ -19,6 +19,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -467,6 +468,7 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
             intent.putParcelableArrayListExtra(USERS_PARCELABLE_ARRAYLIST,userItemsList);
             intent.putExtra(CURRENT_USER_INDEX,userIndex);
             ctx.startActivity(intent);
+            ((AppCompatActivity)ctx).overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out);
         }
 
         public void removeCurrentItem(){

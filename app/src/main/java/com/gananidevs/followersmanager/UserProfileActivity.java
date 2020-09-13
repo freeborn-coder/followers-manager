@@ -133,7 +133,7 @@ public class UserProfileActivity extends AppCompatActivity {
             loadAds();
         }
 
-        initializeViews();
+        //initializeViews();
         twitterSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
         twitterApiClient = new MyTwitterApiClient(twitterSession);
 

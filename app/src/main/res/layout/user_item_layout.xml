@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -7,8 +7,6 @@
     android:layout_marginStart="5dp"
     android:layout_marginBottom="8dp"
     android:background="@color/colorPrimary"
-
-    android:layout_marginTop="20dp"
     android:layout_marginEnd="6dp">
 
     <com.google.android.material.card.MaterialCardView
@@ -17,6 +15,7 @@
         app:cardCornerRadius="20dp"
         app:cardElevation="4dp"
         app:contentPaddingBottom="10dp"
+        android:layout_marginTop="22dp"
         app:cardBackgroundColor="@color/transparent_white">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -97,6 +96,8 @@
             android:textSize="10sp"
             android:textStyle="normal"
             app:cornerRadius="10dp"
+            android:enabled="false"
+            android:clickable="false"
             android:layout_marginTop="5dp"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
             android:backgroundTint="@color/main_activity_low_emphasis_text_color"
@@ -170,4 +171,4 @@
 
     </com.google.android.material.card.MaterialCardView>
 
-</LinearLayout>
+</RelativeLayout>

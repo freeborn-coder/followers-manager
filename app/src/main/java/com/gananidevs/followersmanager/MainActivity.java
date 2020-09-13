@@ -231,7 +231,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         followersCountTv = findViewById(R.id.followers_count_tv);
         followingCountTv = findViewById(R.id.following_count_tv);
         profileImage = findViewById(R.id.main_activity_profile_iv);
-        //progressBar = findViewById(R.id.users_list_progress_bar);
 
         //get buttons
         newFollowersBtn = findViewById(R.id.new_followers_btn);
@@ -307,6 +306,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         intent.putParcelableArrayListExtra(USERS_PARCELABLE_ARRAYLIST,userItemsArrayList);
         intent.putExtra(CURRENT_USER_INDEX,0);
         startActivity(intent);
+        overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out);
         
     }
 
@@ -878,7 +878,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 return true;
             }
             case R.id.action_remove_ads:{
-                startActivity(new Intent(this,RemoveAdsActivity.class));
+                startActivityWithAnimation(new Intent(this,RemoveAdsActivity.class));
                 
                 return true;
             }
@@ -901,7 +901,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         shareIntent.setType("text/plain");
         shareIntent.putExtra(Intent.EXTRA_SUBJECT, R.string.app_share_intent_subject);
         shareIntent.putExtra(Intent.EXTRA_TEXT,"https://play.google.com/store/apps/details?id="+getPackageName());
-        startActivity(Intent.createChooser(shareIntent, "Share via"));
+        startActivityWithAnimation(Intent.createChooser(shareIntent, "Share via"));
         
         drawerLayout.closeDrawer(GravityCompat.START);
     }
@@ -914,7 +914,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             TwitterCore.getInstance().getSessionManager().clearActiveSession();
 
             FirebaseAuth.getInstance().signOut();
-            startActivity(new Intent(this, WelcomeScreenActivity.class));
+            startActivityWithAnimation(new Intent(this, WelcomeScreenActivity.class));
+
             finish();
             
 
@@ -932,7 +933,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
                 Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
         try {
-            startActivity(goToAppListing);
+            startActivityWithAnimation(goToAppListing);
             
         } catch (ActivityNotFoundException e) {
             startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse("http://play.google.com/store/apps/details?id=" + getPackageName())));
