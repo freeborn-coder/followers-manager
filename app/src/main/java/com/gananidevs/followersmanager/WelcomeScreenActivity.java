@@ -51,6 +51,7 @@ public class WelcomeScreenActivity extends AppCompatActivity {
 
     int currentAppVersionCode = 2313101; // Remember to update or increment this whenever you update your app.
     int latestAppVersionCode;
+    private Button loginButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,7 +82,8 @@ public class WelcomeScreenActivity extends AppCompatActivity {
 
         firebaseAuth = FirebaseAuth.getInstance();
 
-        Button loginButton = findViewById(R.id.login_button);
+        loginButton = findViewById(R.id.login_button);
+        loginButton.setVisibility(View.INVISIBLE);
         loginButton.setOnClickListener(new View.OnClickListener() {
 
             @Override
@@ -97,6 +99,7 @@ public class WelcomeScreenActivity extends AppCompatActivity {
                                     Toast.makeText(WelcomeScreenActivity.this, "log in successful", Toast.LENGTH_SHORT).show();
                                     startActivity(new Intent(WelcomeScreenActivity.this, MainActivity.class));
                                     finish();
+                                    overridePendingTransition(android.R.anim.slide_in_left,android.R.anim.slide_out_right);
                                 }
 
                                 @Override
@@ -159,12 +162,13 @@ public class WelcomeScreenActivity extends AppCompatActivity {
         Twitter.initialize(config);
         TwitterSession session = TwitterCore.getInstance().getSessionManager().getActiveSession();
 
-        if (session != null || firebaseAuth.getCurrentUser() != null) {
+        if (session != null) {
             isSignedIn = true;
             goToMainActivity();
         }else{
             progressBar.setVisibility(View.GONE);
             Toast.makeText(this,getString(R.string.sign_in_to_continue),Toast.LENGTH_SHORT).show();
+            loginButton.setVisibility(View.VISIBLE);
         }
 
     }
@@ -213,7 +217,7 @@ public class WelcomeScreenActivity extends AppCompatActivity {
         Intent intent = new Intent(WelcomeScreenActivity.this, MainActivity.class);
         startActivity(intent);
         finish();
-
+        overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out);
     }
 
     @Override

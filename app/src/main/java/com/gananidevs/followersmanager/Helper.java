@@ -43,6 +43,7 @@ public class Helper {
     private static final int MIN_KEY_ACTIONS = 4;
     public static final int ONE_DAY_IN_MILLISECONDS = 1000 * 60 * 60 * 24;
     static final int ONE_DAY_IN_SECONDS = 60 * 60 * 24;
+    static final int ONE_MINUTE_IN_MILLISECONDS = 1000 * 60;
 
     static String TECNO_LB7_TEST_ID = "71346B0C1951E4CFD3A0C08DD218BB76";
 
@@ -102,6 +103,10 @@ public class Helper {
             ((AppCompatActivity)context).requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},110);
 
         }
+    }
+
+    public static boolean shouldShowInterstitial(){
+        return System.currentTimeMillis() - MainActivity.lastTimeShownInterstitial > ONE_MINUTE_IN_MILLISECONDS;
     }
 
     static boolean proceedWithApiCall(Long interval){

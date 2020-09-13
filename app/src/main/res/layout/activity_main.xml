@@ -20,304 +20,305 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="18dp"
-        android:paddingBottom="10dp"
+        android:layout_below="@id/toolbar"
+        android:layout_alignParentBottom="true"
         android:paddingStart="22dp"
+        android:paddingTop="18dp"
         android:paddingEnd="22dp"
-        android:layout_below="@id/toolbar">
+        android:paddingBottom="10dp">
 
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="match_parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
-            <LinearLayout
-                android:id="@+id/buttonsContainer"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="30dp"
-                android:gravity="center_vertical"
-                android:orientation="vertical"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/name_tv">
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/new_followers_btn"
-                    android:layout_width="match_parent"
+                <LinearLayout
+                    android:id="@+id/buttonsContainer"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:backgroundTint="@android:color/white"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp"
-                    android:paddingTop="10dp"
-                    android:paddingBottom="10dp"
-                    android:text="@string/new_followers_btn_default_text"
-                    android:textAlignment="textStart"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-                    android:textSize="16sp"
-                    app:cornerRadius="20dp"
-                    app:icon="@drawable/ic_chevron_right_black_24dp"
-                    app:iconPadding="10dp"
-                    app:iconSize="20dp"
-                    android:textColor="@color/very_dark_222"
-                    app:iconTint="@color/colorAccent" />
+                    android:layout_marginTop="30dp"
+                    android:gravity="center_vertical"
+                    android:orientation="vertical"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/name_tv">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/new_unfollowers_btn"
-                    android:layout_width="match_parent"
+                    <Button
+                        android:id="@+id/new_followers_btn"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:backgroundTint="@android:color/white"
+                        android:paddingStart="20dp"
+                        android:paddingTop="10dp"
+                        android:paddingEnd="20dp"
+                        android:paddingBottom="10dp"
+                        android:text="@string/new_followers_btn_default_text"
+                        android:textAlignment="textStart"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                        android:textColor="@color/very_dark_222"
+                        android:textSize="16sp"
+                        app:cornerRadius="20dp"
+                        app:icon="@drawable/ic_chevron_right_black_24dp"
+                        app:iconPadding="10dp"
+                        app:iconSize="20dp"
+                        app:iconTint="@color/colorAccent" />
+
+                    <Button
+                        android:id="@+id/new_unfollowers_btn"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:backgroundTint="@android:color/white"
+                        android:paddingStart="20dp"
+                        android:paddingTop="10dp"
+                        android:paddingEnd="20dp"
+                        android:paddingBottom="10dp"
+                        android:text="@string/new_unfollowers_btn_default_text"
+                        android:textAlignment="textStart"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                        android:textColor="@color/very_dark_222"
+                        android:textSize="16sp"
+                        app:cornerRadius="20dp"
+                        app:icon="@drawable/ic_chevron_right_black_24dp"
+                        app:iconPadding="10dp"
+                        app:iconSize="20dp"
+                        app:iconTint="@color/colorAccent" />
+
+                    <Button
+                        android:id="@+id/non_followers_btn"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:backgroundTint="@android:color/white"
+                        android:paddingStart="20dp"
+                        android:paddingTop="10dp"
+                        android:paddingEnd="20dp"
+                        android:paddingBottom="10dp"
+                        android:text="@string/non_followers_btn_default_text"
+                        android:textAlignment="textStart"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                        android:textColor="@color/very_dark_222"
+                        android:textSize="16sp"
+                        app:cornerRadius="20dp"
+                        app:icon="@drawable/ic_chevron_right_black_24dp"
+                        app:iconPadding="10dp"
+                        app:iconSize="20dp"
+                        app:iconTint="@color/colorAccent" />
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/fans_btn"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:backgroundTint="@android:color/white"
+                        android:paddingStart="20dp"
+                        android:paddingTop="10dp"
+                        android:paddingEnd="20dp"
+                        android:paddingBottom="10dp"
+                        android:text="@string/fans_btn_default_text"
+                        android:textAlignment="textStart"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                        android:textColor="@color/very_dark_222"
+                        android:textSize="16sp"
+                        app:cornerRadius="20dp"
+                        app:icon="@drawable/ic_chevron_right_black_24dp"
+                        app:iconPadding="10dp"
+                        app:iconSize="20dp"
+                        app:iconTint="@color/colorAccent" />
+
+                    <Button
+                        android:id="@+id/mutual_followers_btn"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:backgroundTint="@android:color/white"
+                        android:paddingStart="20dp"
+                        android:paddingTop="10dp"
+                        android:paddingEnd="20dp"
+                        android:paddingBottom="10dp"
+                        android:text="@string/mutual_followers_btn_default_text"
+                        android:textAlignment="textStart"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                        android:textColor="@color/very_dark_222"
+                        android:textSize="16sp"
+                        app:cornerRadius="20dp"
+                        app:icon="@drawable/ic_chevron_right_black_24dp"
+                        app:iconPadding="10dp"
+                        app:iconSize="20dp"
+                        app:iconTint="@color/colorAccent" />
+
+                    <Button
+                        android:id="@+id/whitelisted_users_btn"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:backgroundTint="@android:color/white"
+                        android:paddingStart="20dp"
+                        android:paddingTop="10dp"
+                        android:paddingEnd="20dp"
+                        android:paddingBottom="10dp"
+                        android:text="@string/whitelisted_users_btn_default_text"
+                        android:textAlignment="textStart"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                        android:textColor="@color/very_dark_222"
+                        android:textSize="16sp"
+                        app:cornerRadius="20dp"
+                        app:icon="@drawable/ic_chevron_right_black_24dp"
+                        app:iconPadding="10dp"
+                        app:iconSize="20dp"
+                        app:iconTint="@color/colorAccent" />
+
+                    <Button
+                        android:id="@+id/search_users_btn"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:backgroundTint="@android:color/white"
+                        android:paddingStart="20dp"
+                        android:paddingTop="10dp"
+                        android:paddingEnd="20dp"
+                        android:paddingBottom="10dp"
+                        android:text="@string/search_users_btn_text"
+                        android:textAlignment="textStart"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                        android:textColor="@color/very_dark_222"
+                        android:textSize="16sp"
+                        app:cornerRadius="20dp"
+                        app:icon="@drawable/ic_chevron_right_black_24dp"
+                        app:iconPadding="10dp"
+                        app:iconSize="20dp"
+                        app:iconTint="@color/colorAccent" />
+
+                </LinearLayout>
+
+
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/main_activity_profile_iv"
+                    android:layout_width="85dp"
+                    android:layout_height="85dp"
+                    android:layout_marginTop="10dp"
+                    android:elevation="2dp"
+                    android:scaleType="centerCrop"
+                    android:src="@android:color/white"
+                    app:layout_constraintBottom_toTopOf="@id/screen_name_tv"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintVertical_bias="0.06" />
+
+                <TextView
+                    android:id="@+id/following_count_tv"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:backgroundTint="@android:color/white"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp"
-                    android:paddingTop="10dp"
-                    android:paddingBottom="10dp"
-                    android:text="@string/new_unfollowers_btn_default_text"
-                    android:textAlignment="textStart"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-                    android:textSize="16sp"
-                    app:cornerRadius="20dp"
-                    app:icon="@drawable/ic_chevron_right_black_24dp"
-                    app:iconPadding="10dp"
-                    android:textColor="@color/very_dark_222"
-                    app:iconSize="20dp"
-                    app:iconTint="@color/colorAccent" />
+                    android:layout_marginTop="15dp"
+                    android:elevation="3dp"
+                    android:text="@string/three_ellipses"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                    android:textColor="@android:color/white"
+                    android:textSize="21sp"
+                    android:textStyle="bold"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/main_activity_profile_iv"
+                    app:layout_constraintTop_toTopOf="@+id/main_activity_profile_iv" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/non_followers_btn"
-                    android:layout_width="match_parent"
+                <TextView
+                    android:id="@+id/following_tv"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:backgroundTint="@android:color/white"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp"
-                    android:paddingTop="10dp"
-                    android:paddingBottom="10dp"
-                    android:text="@string/non_followers_btn_default_text"
-                    android:textAlignment="textStart"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-                    android:textSize="16sp"
-                    app:cornerRadius="20dp"
-                    app:icon="@drawable/ic_chevron_right_black_24dp"
-                    app:iconPadding="10dp"
-                    android:textColor="@color/very_dark_222"
-                    app:iconSize="20dp"
-                    app:iconTint="@color/colorAccent" />
+                    android:layout_marginBottom="15dp"
+                    android:text="@string/following_F_capitalized"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                    android:textColor="@color/main_activity_low_emphasis_text_color"
+                    android:textSize="17sp"
+                    app:layout_constraintBottom_toBottomOf="@+id/main_activity_profile_iv"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/main_activity_profile_iv" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/fans_btn"
-                    android:layout_width="match_parent"
+                <TextView
+                    android:id="@+id/followers_count_tv"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:backgroundTint="@android:color/white"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp"
-                    android:paddingTop="10dp"
-                    android:paddingBottom="10dp"
-                    android:text="@string/fans_btn_default_text"
-                    android:textAlignment="textStart"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-                    android:textSize="16sp"
-                    app:cornerRadius="20dp"
-                    app:icon="@drawable/ic_chevron_right_black_24dp"
-                    app:iconPadding="10dp"
-                    app:iconSize="20dp"
-                    android:textColor="@color/very_dark_222"
-                    app:iconTint="@color/colorAccent" />
+                    android:layout_marginTop="15dp"
+                    android:elevation="3dp"
+                    android:text="@string/three_ellipses"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                    android:textColor="@android:color/white"
+                    android:textSize="21sp"
+                    android:textStyle="bold"
+                    app:layout_constraintEnd_toStartOf="@+id/main_activity_profile_iv"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/main_activity_profile_iv" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/mutual_followers_btn"
-                    android:layout_width="match_parent"
+                <TextView
+                    android:id="@+id/followers_tv"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:backgroundTint="@android:color/white"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp"
-                    android:paddingTop="10dp"
-                    android:paddingBottom="10dp"
-                    android:text="@string/mutual_followers_btn_default_text"
-                    android:textAlignment="textStart"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-                    android:textSize="16sp"
-                    app:cornerRadius="20dp"
-                    app:icon="@drawable/ic_chevron_right_black_24dp"
-                    app:iconPadding="10dp"
-                    android:textColor="@color/very_dark_222"
-                    app:iconSize="20dp"
-                    app:iconTint="@color/colorAccent" />
+                    android:layout_marginBottom="15dp"
+                    android:text="@string/followers_f_capitalized"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                    android:textColor="@color/main_activity_low_emphasis_text_color"
+                    android:textSize="17sp"
+                    app:layout_constraintBottom_toBottomOf="@+id/main_activity_profile_iv"
+                    app:layout_constraintEnd_toStartOf="@+id/main_activity_profile_iv"
+                    app:layout_constraintStart_toStartOf="parent" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/whitelisted_users_btn"
-                    android:layout_width="match_parent"
+                <TextView
+                    android:id="@+id/screen_name_tv"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:backgroundTint="@android:color/white"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp"
-                    android:paddingTop="10dp"
-                    android:paddingBottom="10dp"
-                    android:text="@string/whitelisted_users_btn_default_text"
-                    android:textAlignment="textStart"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-                    android:textSize="16sp"
-                    app:cornerRadius="20dp"
-                    app:icon="@drawable/ic_chevron_right_black_24dp"
-                    android:textColor="@color/very_dark_222"
-                    app:iconPadding="10dp"
-                    app:iconSize="20dp"
-                    app:iconTint="@color/colorAccent" />
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="20dp"
+                    android:text="@string/three_ellipses"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                    android:textColor="@color/main_activity_low_emphasis_text_color"
+                    android:textSize="19sp"
+                    app:layout_constraintEnd_toEndOf="@+id/main_activity_profile_iv"
+                    app:layout_constraintStart_toStartOf="@+id/main_activity_profile_iv"
+                    app:layout_constraintTop_toBottomOf="@+id/main_activity_profile_iv" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/search_users_btn"
-                    android:layout_width="match_parent"
+                <TextView
+                    android:id="@+id/name_tv"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:backgroundTint="@android:color/white"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp"
-                    android:paddingTop="10dp"
-                    android:paddingBottom="10dp"
-                    android:text="@string/search_users_btn_text"
-                    android:textAlignment="textStart"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-                    android:textSize="16sp"
-                    app:cornerRadius="20dp"
-                    app:icon="@drawable/ic_chevron_right_black_24dp"
-                    android:textColor="@color/very_dark_222"
-                    app:iconPadding="10dp"
-                    app:iconSize="20dp"
-                    app:iconTint="@color/colorAccent" />
+                    android:text="@string/three_ellipses"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                    android:textColor="@android:color/white"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    app:layout_constraintEnd_toEndOf="@+id/main_activity_profile_iv"
+                    app:layout_constraintStart_toStartOf="@+id/main_activity_profile_iv"
+                    app:layout_constraintTop_toBottomOf="@+id/screen_name_tv" />
 
-            </LinearLayout>
+                <View
+                    android:id="@+id/divider"
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="15dp"
+                    android:layout_marginBottom="15dp"
+                    android:background="@color/divider_line_color"
+                    app:layout_constraintBottom_toTopOf="@+id/buttonsContainer"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/name_tv" />
 
+                <ProgressBar
+                    android:id="@+id/users_list_progress_bar"
+                    style="?android:attr/progressBarStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="invisible"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintVertical_bias="0.7" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <de.hdodenhof.circleimageview.CircleImageView
-                android:id="@+id/main_activity_profile_iv"
-                android:layout_width="85dp"
-                android:layout_height="85dp"
-                android:layout_marginTop="10dp"
-                android:elevation="2dp"
-                android:scaleType="centerCrop"
-                android:src="@android:color/white"
-                app:layout_constraintBottom_toTopOf="@id/screen_name_tv"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.06" />
-
-            <TextView
-                android:id="@+id/following_count_tv"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="15dp"
-                android:elevation="3dp"
-                android:text="@string/three_ellipses"
-                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                android:textColor="@android:color/white"
-                android:textSize="21sp"
-                android:textStyle="bold"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/main_activity_profile_iv"
-                app:layout_constraintTop_toTopOf="@+id/main_activity_profile_iv" />
-
-            <TextView
-                android:id="@+id/following_tv"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="15dp"
-                android:text="@string/following_F_capitalized"
-                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                android:textColor="@color/main_activity_low_emphasis_text_color"
-                android:textSize="17sp"
-                app:layout_constraintBottom_toBottomOf="@+id/main_activity_profile_iv"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/main_activity_profile_iv" />
-
-            <TextView
-                android:id="@+id/followers_count_tv"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="15dp"
-                android:text="@string/three_ellipses"
-                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                android:textColor="@android:color/white"
-                android:textSize="21sp"
-                android:textStyle="bold"
-                android:elevation="3dp"
-                app:layout_constraintEnd_toStartOf="@+id/main_activity_profile_iv"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/main_activity_profile_iv" />
-
-            <TextView
-                android:id="@+id/followers_tv"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="15dp"
-                android:text="@string/followers_f_capitalized"
-                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                android:textColor="@color/main_activity_low_emphasis_text_color"
-                android:textSize="17sp"
-                app:layout_constraintBottom_toBottomOf="@+id/main_activity_profile_iv"
-                app:layout_constraintEnd_toStartOf="@+id/main_activity_profile_iv"
-                app:layout_constraintStart_toStartOf="parent" />
-
-            <TextView
-                android:id="@+id/screen_name_tv"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="20dp"
-                android:text="@string/three_ellipses"
-                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                android:textColor="@color/main_activity_low_emphasis_text_color"
-                android:textSize="19sp"
-                app:layout_constraintEnd_toEndOf="@+id/main_activity_profile_iv"
-                app:layout_constraintStart_toStartOf="@+id/main_activity_profile_iv"
-                app:layout_constraintTop_toBottomOf="@+id/main_activity_profile_iv" />
-
-            <TextView
-                android:id="@+id/name_tv"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/three_ellipses"
-                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                android:textColor="@android:color/white"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                app:layout_constraintEnd_toEndOf="@+id/main_activity_profile_iv"
-                app:layout_constraintStart_toStartOf="@+id/main_activity_profile_iv"
-                app:layout_constraintTop_toBottomOf="@+id/screen_name_tv" />
-
-            <View
-                android:id="@+id/divider"
-                android:layout_width="0dp"
-                android:layout_height="1dp"
-                android:layout_marginTop="15dp"
-                android:layout_marginBottom="15dp"
-                android:background="@color/divider_line_color"
-                app:layout_constraintBottom_toTopOf="@+id/buttonsContainer"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/name_tv" />
-
-            <ProgressBar
-                android:id="@+id/users_list_progress_bar"
-                style="?android:attr/progressBarStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:visibility="invisible"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.7" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-    </ScrollView>
+        </ScrollView>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

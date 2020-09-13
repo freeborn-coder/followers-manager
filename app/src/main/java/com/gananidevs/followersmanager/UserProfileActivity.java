@@ -84,6 +84,7 @@ import static com.gananidevs.followersmanager.Helper.incrementApiRequestCount;
 import static com.gananidevs.followersmanager.Helper.insertCommas;
 import static com.gananidevs.followersmanager.Helper.isNetworkConnected;
 import static com.gananidevs.followersmanager.Helper.proceedWithApiCall;
+import static com.gananidevs.followersmanager.Helper.shouldShowInterstitial;
 import static com.gananidevs.followersmanager.Helper.showRequestFollowBackBottomSheetDialog;
 import static com.gananidevs.followersmanager.Helper.showSnackBar;
 import static com.gananidevs.followersmanager.UsersRecyclerAdapter.hideProgressShowButtonText;
@@ -128,9 +129,9 @@ public class UserProfileActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         setActionBarTitle(getString(R.string.profile));
 
-        if(MainActivity.isShowingAds)
+        if(MainActivity.isShowingAds) {
             loadAds();
-
+        }
 
         initializeViews();
         twitterSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
@@ -145,6 +146,7 @@ public class UserProfileActivity extends AppCompatActivity {
         viewPager.setAdapter(profilePagerAdapter);
         viewPager.setCurrentItem(currentUserIndex);
         viewPager.setPageMargin(10);
+
         //loadDataIntoViews(currentItem);
 
     }
@@ -640,7 +642,9 @@ public class UserProfileActivity extends AppCompatActivity {
             }
         });
 
-        mInterstitialAd.loadAd(adRequest);
+        if(shouldShowInterstitial()) {
+            mInterstitialAd.loadAd(adRequest);
+        }
 
     }
 
@@ -733,8 +737,9 @@ public class UserProfileActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if(MainActivity.isShowingAds && mInterstitialAd.isLoaded()){
+        if(MainActivity.isShowingAds && mInterstitialAd.isLoaded() && shouldShowInterstitial()){
             mInterstitialAd.show();
+            MainActivity.lastTimeShownInterstitial = System.currentTimeMillis();
         }else{
             super.onBackPressed();
         }
