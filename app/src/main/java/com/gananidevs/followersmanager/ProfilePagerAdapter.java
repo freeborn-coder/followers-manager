@@ -1,14 +1,21 @@
 package com.gananidevs.followersmanager;
 
+import android.Manifest;
 import android.app.Dialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -21,7 +28,10 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapter;
@@ -31,8 +41,11 @@ import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
+import com.google.firebase.database.DatabaseReference;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.TwitterApiClient;
@@ -52,9 +65,13 @@ import static com.gananidevs.followersmanager.Helper.LIST_NAME;
 import static com.gananidevs.followersmanager.Helper.SCREEN_NAME_OF_USER;
 import static com.gananidevs.followersmanager.Helper.USER_ID;
 import static com.gananidevs.followersmanager.Helper.changeButtonTextAndColor;
+import static com.gananidevs.followersmanager.Helper.checkWhetherToAskUserToRateApp;
+import static com.gananidevs.followersmanager.Helper.getMinutesLeft;
 import static com.gananidevs.followersmanager.Helper.incrementApiRequestCount;
 import static com.gananidevs.followersmanager.Helper.insertCommas;
 import static com.gananidevs.followersmanager.Helper.proceedWithApiCall;
+import static com.gananidevs.followersmanager.Helper.showRequestFollowBackBottomSheetDialog;
+import static com.gananidevs.followersmanager.Helper.showSnackBar;
 import static com.gananidevs.followersmanager.UsersRecyclerAdapter.hideProgressShowButtonText;
 import static com.gananidevs.followersmanager.UsersRecyclerAdapter.showProgressHideButtonText;
 
@@ -83,6 +100,13 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
 
     public static class ProfileFragment extends Fragment{
         UserItem userItem;
+        boolean isImageLoaded;
+        private ProgressBar progressBar;
+        private BottomSheetDialog dialog;
+        private ConstraintLayout constraintLayout;
+        private ProgressBar btnProgressBar;
+        private MaterialButton followUnfollowBtn;
+
         public ProfileFragment(UserItem userItem) {
             this.userItem = userItem;
         }
@@ -99,7 +123,7 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
 
         private void bindViewToUserItem(View view) {
 
-            Dialog dialog = new BottomSheetDialog(getContext());
+            dialog = new BottomSheetDialog(getContext());
 
             ImageView popupIcon = view.findViewById(R.id.popup_icon);
             ImageView profileImage = view.findViewById(R.id.profile_image);
@@ -108,8 +132,8 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
             TextView screenNameTv = view.findViewById(R.id.screen_name_tv);
             TextView followersCountTv = view.findViewById(R.id.followers_count_tv);
             TextView followingCountTv = view.findViewById(R.id.following_count_tv);
-            TextView whitelistStatusTv = view.findViewById(R.id.whitelisted_status_tv);
-            final MaterialButton followUnfollowBtn = view.findViewById(R.id.follow_unfollow_button);
+            final TextView whitelistStatusTv = view.findViewById(R.id.whitelisted_status_tv);
+            followUnfollowBtn = view.findViewById(R.id.follow_unfollow_button);
             MaterialButton followStatusBtn = view.findViewById(R.id.follow_status_button);
             TextView followersTv = view.findViewById(R.id.followers_tv);
             TextView followingTv = view.findViewById(R.id.following_tv);
@@ -119,9 +143,9 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
             EditText userLinkEt = view.findViewById(R.id.link_et);
             TextView twitterLinkTv = view.findViewById(R.id.twitter_link_tv);
             ImageView linkIcon = view.findViewById(R.id.link_icon);
-            final ProgressBar btnProgressBar = view.findViewById(R.id.btn_progress_bar);
-            ConstraintLayout constraintLayout = view.findViewById(R.id.constraint_layout);
-            ProgressBar progressBar = view.findViewById(R.id.progress_bar);
+            btnProgressBar = view.findViewById(R.id.btn_progress_bar);
+            constraintLayout = view.findViewById(R.id.constraint_layout);
+            progressBar = view.findViewById(R.id.progress_bar);
 
             /*
             ImageView iv = view.findViewById(R.id.profile_image);
@@ -167,9 +191,9 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
 
             // check if you are following the user or not for follow or unfollow button
             if(Helper.isFriend(userItem.id)){
-                changeButtonTextAndColor(getContext(),followUnfollowBtn,R.string.unfollow_all_lowercase,R.color.colorAccent);
+                changeButtonTextAndColor(getContext(), followUnfollowBtn,R.string.unfollow_all_lowercase,R.color.colorAccent);
             }else{
-                changeButtonTextAndColor(getContext(),followUnfollowBtn,R.string.follow_all_lowercase,R.color.follow_btn_back_color);
+                changeButtonTextAndColor(getContext(), followUnfollowBtn,R.string.follow_all_lowercase,R.color.follow_btn_back_color);
             }
 
             try{
@@ -259,7 +283,7 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
                     }
 
                     // Add menu actions
-                    popupMenu.setOnMenuItemClickListener(new UserProfileActivity.MyPopMenuItemClickListener());
+                    popupMenu.setOnMenuItemClickListener(new MyPopMenuItemClickListener(whitelistStatusTv));
                     popupMenu.show();
 
                 }
@@ -286,7 +310,7 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
                             new Handler().postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
-                                    followUser(userId);
+                                    followUser(userId, followUnfollowBtn, btnProgressBar);
                                 }
                             }, delay);
 
@@ -308,7 +332,7 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
                                     new Handler().postDelayed(new Runnable() {
                                         @Override
                                         public void run() {
-                                            unfollowUser(userId);
+                                            unfollowUser(userId, followUnfollowBtn, btnProgressBar);
                                         }
                                     }, delay);
                                 }
@@ -373,12 +397,12 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
                             if(isImageLoaded) {
                                 try {
                                     dialogImage.setDrawingCacheEnabled(true);
-                                    bitmap = dialogImage.getDrawingCache();
-                                    imageTitle = System.currentTimeMillis() + userItem.screenName;
-                                    imageDescription = userItem.screenName + " profile photo from followers manager app";
+                                    Bitmap bitmap = dialogImage.getDrawingCache();
+                                    String imageTitle = System.currentTimeMillis() + userItem.screenName;
+                                    String imageDescription = userItem.screenName + " profile photo from followers manager app";
 
                                     if(Build.VERSION.SDK_INT >= 23){
-                                        if(checkWritePermission()){
+                                        if(checkWritePermission(getContext())){
                                             saveImage(bitmap, imageTitle, imageDescription);
                                         }
                                     }else{
@@ -435,6 +459,17 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
             startActivity(intent);
         }
 
+        private void saveImage(Bitmap bitmap, String title, String description) {
+            try {
+                if (MediaStore.Images.Media.insertImage(getContext().getContentResolver(), bitmap, title, description) != null) {
+                    Toast.makeText(getContext(), getString(R.string.saved), Toast.LENGTH_SHORT).show();
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+                Toast.makeText(getContext(),e.getMessage(),Toast.LENGTH_SHORT).show();
+            }
+        }
+
         private void viewUserFollowers() {
             Intent intent = new Intent(getContext(),UsersListActivity.class);
             intent.putExtra(LIST_NAME,A_USERS_FOLLOWERS);
@@ -443,7 +478,7 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
             startActivity(intent);
         }
 
-        private void followUser(final Long userId) {
+        private void followUser(final Long userId,final MaterialButton followUnfollowBtn,final ProgressBar btnProgressBar) {
 
             twitterApiClient.getFriendshipsCreateCustomService().post(userId).enqueue(new Callback<ResponseBody>() {
                 @Override
@@ -464,7 +499,7 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
 
         }
 
-        private void unfollowUser(final Long userId){
+        private void unfollowUser(final Long userId,final MaterialButton followUnfollowBtn,final ProgressBar btnProgressBar){
 
             twitterApiClient.getFriendshipsDestroyCustomService().post(userId).enqueue(new Callback<ResponseBody>() {
                 @Override
@@ -485,8 +520,145 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
         }
 
 
+        public class MyPopMenuItemClickListener implements PopupMenu.OnMenuItemClickListener {
+            TextView whitelistStatusTv;
+            MyPopMenuItemClickListener(TextView whitelistStatusTv){
+                this.whitelistStatusTv = whitelistStatusTv;
+            }
 
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                String title = item.getTitle().toString();
 
+                if(title.equals(getString(R.string.add_to_whitelist))){
+                    // Add tow whitelist
+                    progressBar.setVisibility(View.VISIBLE);
+                    addCurrentItemToWhitelist(whitelistStatusTv);
+
+                }else if(title.equals(getString(R.string.remove_from_whitelist))){
+                    // Remove current user from whitelist
+                    progressBar.setVisibility(View.VISIBLE);
+                    removeCurrentItemFromWhiteList(whitelistStatusTv);
+
+                }else if(title.equals(getString(R.string.view_followers))){
+                    // view user's followers
+                    viewUserFollowers();
+
+                }else if(title.equals(getString(R.string.view_following))){
+                    // view user's following
+                    viewUserFollowing();
+
+                }else if(title.equals(getString(R.string.request_follow_back))){
+                    // Ask the user to follow back
+                    showRequestFollowBackBottomSheetDialog(getContext(),userItem.screenName, dialog,twitterApiClient,progressBar);
+                }else if(title.equals(getString(R.string.just_view_on_twitter))){
+                    //view profile on twitter
+                    try {
+                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://twitter.com/"+ userItem.screenName));
+                        startActivity(intent);
+                    }catch (Exception e){
+                        e.printStackTrace();
+                        if( BuildConfig.DEBUG){
+                            Toast.makeText(getContext(),e.getMessage(),Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                }
+                return true;
+            }
+
+        }
+
+        private void removeCurrentItemFromWhiteList(final TextView whitelistStatusTv) {
+
+            DatabaseReference databaseReference = FirebaseUtil.openDbReference("whitelist/" + twitterSession.getUserId()+"/"+userItem.id);
+
+            databaseReference.removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+
+                    if(task.isSuccessful()){
+                        ++MainActivity.keyActionsCount;
+                        Toast.makeText(getContext(),userItem.screenName+" removed successfully",Toast.LENGTH_SHORT).show();
+
+                        if(MainActivity.remindUserToRateApp){
+                            checkWhetherToAskUserToRateApp(getContext());
+                        }
+                        whitelistStatusTv.setVisibility(View.GONE);
+
+                    }else{
+                        progressBar.setVisibility(View.GONE);
+                        Toast.makeText(getContext(),task.getException().getMessage(),Toast.LENGTH_SHORT).show();
+                    }
+                    progressBar.setVisibility(View.GONE);
+                }
+            });
+        }
+
+        private void addCurrentItemToWhitelist(final TextView whitelistStatusTv) {
+            Long signedInUserId = twitterSession.getUserId();
+            final Long whitelistedUserId = userItem.id;
+            DatabaseReference databaseReference = FirebaseUtil.openDbReference("whitelist/"+signedInUserId+"/"+whitelistedUserId);
+            databaseReference.setValue(userItem.screenName).addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+
+                    if(task.isSuccessful()){
+                        MainActivity.nonFollowersIdsList.remove(whitelistedUserId);
+                        Toast.makeText(getContext(),userItem.screenName+" added to whitelist",Toast.LENGTH_SHORT).show();
+                        ++MainActivity.keyActionsCount;
+
+                        if(MainActivity.remindUserToRateApp){
+                            checkWhetherToAskUserToRateApp(getContext());
+                        }
+
+                        whitelistStatusTv.setVisibility(View.VISIBLE);
+                    }else{
+                        Toast.makeText(getContext(), Objects.requireNonNull(task.getException()).getMessage(),Toast.LENGTH_SHORT).show();
+                    }
+
+                    progressBar.setVisibility(View.GONE);
+
+                }
+            });
+        }
+
+        private void showDialogAndFeignWork(String userScreenName) {
+
+            new AlertDialog.Builder(getContext()).setTitle("confirm action")
+                    .setMessage(getString(R.string.unfollow_all_lowercase) + " " + userScreenName + "?")
+                    .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            placeboAction();
+                        }
+                    }).setNegativeButton(getString(R.string.cancel), null)
+                    .show();
+
+        }
+
+        private void placeboAction() { // load like you are doing something, then show error message
+            showProgressHideButtonText(btnProgressBar, followUnfollowBtn, getContext());
+            int delay = new Random().nextInt(1000) + 1000;
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    hideProgressShowButtonText(btnProgressBar, followUnfollowBtn, getContext());
+                    int minutesLeft = getMinutesLeft(MainActivity.last15MinTimeStamp);
+                    showSnackBar(constraintLayout, minutesLeft);
+                }
+            }, delay);
+        }
+
+    }
+
+    private static boolean checkWritePermission(Context context) {
+        if(context.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            return true;
+        }else{
+            ActivityCompat.requestPermissions(((AppCompatActivity)context),new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},11);
+            return false;
+        }
     }
 
 

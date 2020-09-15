@@ -4,6 +4,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -468,7 +469,7 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
             intent.putParcelableArrayListExtra(USERS_PARCELABLE_ARRAYLIST,userItemsList);
             intent.putExtra(CURRENT_USER_INDEX,userIndex);
             ctx.startActivity(intent);
-            ((AppCompatActivity)ctx).overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out);
+            ((AppCompatActivity)ctx).overridePendingTransition(android.R.anim.slide_in_left,android.R.anim.slide_out_right);
         }
 
         public void removeCurrentItem(){

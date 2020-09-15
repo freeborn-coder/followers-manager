@@ -755,7 +755,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
     }
 
-    private class MyPopMenuItemClickListener implements PopupMenu.OnMenuItemClickListener {
+    public class MyPopMenuItemClickListener implements PopupMenu.OnMenuItemClickListener {
 
 
         @Override

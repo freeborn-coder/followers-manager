@@ -305,8 +305,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         userItemsArrayList.add(user);
         intent.putParcelableArrayListExtra(USERS_PARCELABLE_ARRAYLIST,userItemsArrayList);
         intent.putExtra(CURRENT_USER_INDEX,0);
-        startActivity(intent);
-        overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out);
+        startActivityWithAnimation(intent);
         
     }
 

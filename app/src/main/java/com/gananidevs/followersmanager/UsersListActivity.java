@@ -33,6 +33,7 @@ import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
 
+import java.io.Serializable;
 import java.lang.ref.WeakReference;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -46,7 +47,7 @@ import static com.gananidevs.followersmanager.Helper.*;
 
 public class UsersListActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
 
-    ArrayList<UserItem> userItemsList; // itemslist is for the fully hydrated user itsms
+    ArrayList<UserItem> userItemsList; // itemslist is for the fully hydrated user items
     private LinearLayoutManager linearLayoutManager;
     public static boolean isLoading = true;
     public static ProgressBar progressBar;
@@ -70,11 +71,13 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
     private boolean isAdLoaded = false;
     private InterstitialAd mInterstitialAd;
 
+    //Helper object for moving between profiles in profile activity
+    UsersListHelper usersListHelper;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_users_list);
-
 
         // get the Ad view
         adView = findViewById(R.id.banner_ad_view);
@@ -82,7 +85,6 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
             loadAds();
         else
             adView.setVisibility(View.GONE);
-
 
         twitterSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
         twitterApiClient = new MyTwitterApiClient(twitterSession);
@@ -161,6 +163,19 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
         }else if(userIdsList.size() > 0){
             loadRecyclerViewData(0,userIdsList.size(),progressBar,recyclerAdapter,userIdsList);
         }
+
+        usersListHelper = new UsersListHelper() {
+            @Override
+            public UserItem getNextItem(int currentIndex) {
+                return userItemsList.get(currentIndex+1);
+            }
+
+            @Override
+            public UserItem getPreviousItem(int currentIndex) {
+                return userItemsList.get(currentIndex-1);
+            }
+        };
+
 
     }
 
