@@ -71,8 +71,8 @@
                         app:layout_constraintStart_toEndOf="@+id/name_tv"
                         app:layout_constraintTop_toTopOf="@id/name_tv"
                         app:layout_constraintBottom_toBottomOf="@id/name_tv"
-                        android:tint="@color/tw__solid_white"
-                        android:visibility="gone"/>
+                        android:visibility="gone"
+                        app:tint="@color/tw__solid_white" />
 
                     <TextView
                         android:id="@+id/screen_name_tv"
@@ -189,18 +189,19 @@
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/follow_unfollow_button"
-                            android:layout_width="wrap_content"
-                            android:layout_height="35dp"
-                            android:elevation="5dp"
-                            android:paddingTop="1dp"
-                            android:paddingStart="1dp"
-                            android:paddingEnd="1dp"
-                            android:textSize="14sp"
+                            android:layout_width="80dp"
+                            android:layout_height="42dp"
+                            android:paddingStart="11dp"
+                            android:paddingTop="3dp"
+                            android:paddingEnd="11dp"
+                            android:paddingBottom="5dp"
                             android:text="@string/unfollow_all_lowercase"
-                            android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                            android:textSize="14sp"
+                            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
                             android:textColor="@color/tw__solid_white"
-                            app:backgroundTint="@color/follow_btn_back_color"
-                            app:cornerRadius="11dp" />
+                            android:elevation="5dp"
+                            app:cornerRadius="15dp"
+                            app:backgroundTint="@color/follow_btn_back_color" />
 
                         <ProgressBar
                             android:id="@+id/btn_progress_bar"
@@ -324,8 +325,8 @@
                     android:layout_height="wrap_content"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    android:tint="@color/light_gray_for_icons"
-                    app:srcCompat="@drawable/ic_location_on_black_24dp" />
+                    app:srcCompat="@drawable/ic_location_on_black_24dp"
+                    app:tint="@color/light_gray_for_icons" />
 
                 <ImageView
                     android:id="@+id/date_icon"
@@ -334,8 +335,8 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/location_icon"
                     android:layout_marginTop="20dp"
-                    android:tint="@color/light_gray_for_icons"
-                    app:srcCompat="@drawable/ic_date_range_black_24dp" />
+                    app:srcCompat="@drawable/ic_date_range_black_24dp"
+                    app:tint="@color/light_gray_for_icons" />
 
                 <ImageView
                     android:id="@+id/link_icon"
@@ -344,8 +345,8 @@
                     app:layout_constraintTop_toBottomOf="@id/date_icon"
                     app:layout_constraintStart_toStartOf="parent"
                     android:layout_marginTop="20dp"
-                    android:tint="@color/light_gray_for_icons"
-                    app:srcCompat="@drawable/ic_link_black_24dp" />
+                    app:srcCompat="@drawable/ic_link_black_24dp"
+                    app:tint="@color/light_gray_for_icons" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <FrameLayout
@@ -360,11 +361,11 @@
                 android:layout_width="30dp"
                 android:layout_height="30dp"
                 android:src="@drawable/ic_chevron_right_black_24dp"
-                android:tint="@color/colorAccent"
                 app:layout_constraintBottom_toBottomOf="@id/twitter_link_tv"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="@id/twitter_link_tv"
-                app:srcCompat="@drawable/ic_chevron_right_black_24dp" />
+                app:srcCompat="@drawable/ic_chevron_right_black_24dp"
+                app:tint="@color/colorAccent" />
 
 
             <View

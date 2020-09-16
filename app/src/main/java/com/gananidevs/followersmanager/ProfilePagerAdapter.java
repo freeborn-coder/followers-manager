@@ -20,6 +20,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
@@ -41,6 +42,11 @@ import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdLoader;
+import com.google.android.gms.ads.LoadAdError;
+import com.google.android.gms.ads.formats.UnifiedNativeAd;
+import com.google.android.gms.ads.formats.UnifiedNativeAdView;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
@@ -59,6 +65,7 @@ import java.util.Random;
 
 import okhttp3.ResponseBody;
 
+import static com.gananidevs.followersmanager.Helper.AD_RELOAD_DELAY;
 import static com.gananidevs.followersmanager.Helper.A_USERS_FOLLOWERS;
 import static com.gananidevs.followersmanager.Helper.A_USERS_FOLLOWING;
 import static com.gananidevs.followersmanager.Helper.LIST_NAME;
@@ -69,9 +76,11 @@ import static com.gananidevs.followersmanager.Helper.checkWhetherToAskUserToRate
 import static com.gananidevs.followersmanager.Helper.getMinutesLeft;
 import static com.gananidevs.followersmanager.Helper.incrementApiRequestCount;
 import static com.gananidevs.followersmanager.Helper.insertCommas;
+import static com.gananidevs.followersmanager.Helper.isNetworkConnected;
 import static com.gananidevs.followersmanager.Helper.proceedWithApiCall;
 import static com.gananidevs.followersmanager.Helper.showRequestFollowBackBottomSheetDialog;
 import static com.gananidevs.followersmanager.Helper.showSnackBar;
+import static com.gananidevs.followersmanager.UserProfileActivity.mapNativeAdToLayout;
 import static com.gananidevs.followersmanager.UsersRecyclerAdapter.hideProgressShowButtonText;
 import static com.gananidevs.followersmanager.UsersRecyclerAdapter.showProgressHideButtonText;
 
@@ -80,17 +89,19 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
     ArrayList<UserItem> userItems;
     static TwitterSession twitterSession;
     static MyTwitterApiClient twitterApiClient;
+    ProgressBar progressBar;
 
-    public ProfilePagerAdapter(FragmentManager fm,ArrayList<UserItem> items) {
+    public ProfilePagerAdapter(FragmentManager fm,ArrayList<UserItem> items,ProgressBar progressBar) {
         super(fm,FragmentStatePagerAdapter.BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
         twitterSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
         twitterApiClient = new MyTwitterApiClient(twitterSession);
         this.userItems = items;
+        this.progressBar = progressBar;
     }
 
     @Override
     public Fragment getItem(int position) {
-        return new ProfileFragment(userItems.get(position));
+        return new ProfileFragment(userItems.get(position),progressBar);
     }
 
     @Override
@@ -106,9 +117,12 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
         private ConstraintLayout constraintLayout;
         private ProgressBar btnProgressBar;
         private MaterialButton followUnfollowBtn;
+        private UnifiedNativeAdView nativeAdView;
+        private AdLoader adLoader;
 
-        public ProfileFragment(UserItem userItem) {
+        public ProfileFragment(UserItem userItem,ProgressBar progressBar) {
             this.userItem = userItem;
+            this.progressBar = progressBar;
         }
 
         @Nullable
@@ -120,8 +134,7 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
         }
 
 
-
-        private void bindViewToUserItem(View view) {
+        private void bindViewToUserItem(final View view) {
 
             dialog = new BottomSheetDialog(getContext());
 
@@ -145,24 +158,7 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
             ImageView linkIcon = view.findViewById(R.id.link_icon);
             btnProgressBar = view.findViewById(R.id.btn_progress_bar);
             constraintLayout = view.findViewById(R.id.constraint_layout);
-            progressBar = view.findViewById(R.id.progress_bar);
 
-            /*
-            ImageView iv = view.findViewById(R.id.profile_image);
-            Glide.with(Objects.requireNonNull(getContext())).load(item.profileImageUrlHttps).into(iv);
-
-            TextView nameTv,screenNameTv,followersCountTv,followingCountTv;
-            nameTv = view.findViewById(R.id.name_tv);
-            screenNameTv = view.findViewById(R.id.screen_name_tv);
-            followersCountTv = view.findViewById(R.id.followers_count_tv);
-            followingCountTv = view.findViewById(R.id.following_count_tv);
-
-            nameTv.setText(userItem.name);
-            screenNameTv.setText(userItem.screenName);
-            followersCountTv.setText(Helper.insertCommas(userItem.followersCount));
-            followingCountTv.setText(Helper.insertCommas(userItem.friendsCount));
-
-             */
             verifiedIcon = view.findViewById(R.id.verified_icon);
 
             // Check if a user is verified
@@ -226,6 +222,7 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
                     try {
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://twitter.com/"+ userItem.screenName));
                         startActivity(intent);
+                        ((AppCompatActivity)view.getContext()).overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out);
                     }catch (Exception e){
                         e.printStackTrace();
                         if( BuildConfig.DEBUG){
@@ -429,7 +426,51 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
                 }
             });
 
+            if(MainActivity.isShowingAds) {
+                loadNativeAd(view);
+            }
 
+        }
+
+        private void loadNativeAd(final View view) {
+            // Load Native Ad
+            adLoader = new AdLoader.Builder(getContext(),getString(R.string.native_ad_unit_id))
+                    .forUnifiedNativeAd(new UnifiedNativeAd.OnUnifiedNativeAdLoadedListener() {
+                        @Override
+                        public void onUnifiedNativeAdLoaded(UnifiedNativeAd unifiedNativeAd) {
+                            nativeAdView = (UnifiedNativeAdView)getLayoutInflater().inflate(R.layout.native_ad_layout,null,false);
+                            mapNativeAdToLayout(unifiedNativeAd, nativeAdView);
+
+                            FrameLayout nativeAdLayout = view.findViewById(R.id.native_ad);
+                            nativeAdLayout.removeAllViews();
+                            nativeAdLayout.addView(nativeAdView);
+                        }
+                    })
+                    .withAdListener(new AdListener(){
+                        @Override
+                        public void onAdLoaded() {
+                            super.onAdLoaded();
+
+                            if(isDetached()){
+                                if(nativeAdView != null) nativeAdView.destroy();
+                            }
+                        }
+
+                        @Override
+                        public void onAdFailedToLoad(LoadAdError loadAdError) {
+                            super.onAdFailedToLoad(loadAdError);
+
+                            new Handler().postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if(isNetworkConnected(view.getContext()))adLoader.loadAd(MainActivity.adRequest);
+                                }
+                            },AD_RELOAD_DELAY);
+                        }
+                    })
+                    .build();
+
+            adLoader.loadAd(MainActivity.adRequest);
         }
 
 

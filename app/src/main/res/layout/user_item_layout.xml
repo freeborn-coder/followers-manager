@@ -86,23 +86,20 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/follow_status_button"
             android:layout_width="wrap_content"
-            android:layout_height="32dp"
-            android:paddingStart="5dp"
-            android:paddingEnd="5dp"
+            android:layout_height="35dp"
             android:paddingTop="3dp"
             android:text="@string/doesnt_follow_you"
             android:textAlignment="center"
-            android:textColor="@android:color/white"
-            android:textSize="10sp"
-            android:textStyle="normal"
-            app:cornerRadius="5dp"
+            android:textColor="#CCCCCC"
+            android:textSize="11sp"
             android:enabled="false"
             android:clickable="false"
+            app:cornerRadius="5dp"
             android:layout_marginTop="5dp"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body2"
             android:backgroundTint="@color/main_activity_low_emphasis_text_color"
             app:layout_constraintTop_toBottomOf="@id/screen_name_tv"
-            app:layout_constraintStart_toEndOf="@+id/profile_image" />
+            app:layout_constraintStart_toStartOf="@id/screen_name_tv"/>
 
         <TextView
             android:layout_width="wrap_content"
@@ -129,7 +126,7 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/follow_unfollow_button"
                 android:layout_width="80dp"
-                android:layout_height="45dp"
+                android:layout_height="42dp"
                 android:paddingStart="11dp"
                 android:paddingTop="3dp"
                 android:paddingEnd="11dp"
@@ -140,7 +137,7 @@
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
                 android:textColor="@color/tw__solid_white"
                 android:elevation="5dp"
-                app:cornerRadius="20dp" />
+                app:cornerRadius="15dp" />
 
             <ProgressBar
                 android:id="@+id/btn_progress_bar"

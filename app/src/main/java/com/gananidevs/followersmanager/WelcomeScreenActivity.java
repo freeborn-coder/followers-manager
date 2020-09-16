@@ -217,7 +217,7 @@ public class WelcomeScreenActivity extends AppCompatActivity {
         Intent intent = new Intent(WelcomeScreenActivity.this, MainActivity.class);
         startActivity(intent);
         finish();
-        overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out);
+        overridePendingTransition(android.R.anim.fade_in,android.R.anim.slide_out_right);
     }
 
     @Override

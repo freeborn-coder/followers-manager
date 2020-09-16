@@ -54,7 +54,7 @@ public class Helper {
     static final String USERS_PARCELABLE_ARRAYLIST = "users parcelable arraylist";
     static final String CURRENT_USER_INDEX = "current user index";
 
-    public static long AD_RELOAD_DELAY = 3000;
+    public static long AD_RELOAD_DELAY = 5000;
 
     static final String DATABASE_URL = "https://followers-manager-for-twitter.firebaseio.com/";
 

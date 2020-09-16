@@ -43,6 +43,7 @@ import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdLoader;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.RequestConfiguration;
 import com.google.android.gms.ads.formats.MediaView;
@@ -113,7 +114,7 @@ public class UserProfileActivity extends AppCompatActivity {
     private InterstitialAd mInterstitialAd;
     private BottomSheetDialog dialog;
     private MyTwitterApiClient twitterApiClient;
-    private ProgressBar progressBar;
+    public ProgressBar progressBar;
     private DatabaseReference databaseReference;
     private AdLoader adLoader;
     private AdRequest adRequest;
@@ -134,20 +135,26 @@ public class UserProfileActivity extends AppCompatActivity {
         }
 
         //initializeViews();
-        twitterSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
-        twitterApiClient = new MyTwitterApiClient(twitterSession);
+        try {
+            twitterSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
+            twitterApiClient = new MyTwitterApiClient(twitterSession);
 
-        userItemArrayList = getIntent().getParcelableArrayListExtra(USERS_PARCELABLE_ARRAYLIST);
-        currentUserIndex = getIntent().getIntExtra(CURRENT_USER_INDEX,0);
-        currentItem = userItemArrayList.get(currentUserIndex);
+            userItemArrayList = getIntent().getParcelableArrayListExtra(USERS_PARCELABLE_ARRAYLIST);
+            currentUserIndex = getIntent().getIntExtra(CURRENT_USER_INDEX, 0);
+            currentItem = userItemArrayList.get(currentUserIndex);
 
-        viewPager = findViewById(R.id.view_pager);
-        profilePagerAdapter = new ProfilePagerAdapter(getSupportFragmentManager(),userItemArrayList);
-        viewPager.setAdapter(profilePagerAdapter);
-        viewPager.setCurrentItem(currentUserIndex);
-        viewPager.setPageMargin(10);
+            viewPager = findViewById(R.id.view_pager);
+            progressBar = findViewById(R.id.progress_bar);
+            profilePagerAdapter = new ProfilePagerAdapter(getSupportFragmentManager(), userItemArrayList, progressBar);
+            viewPager.setAdapter(profilePagerAdapter);
+            viewPager.setCurrentItem(currentUserIndex);
+            viewPager.setPageMargin(10);
 
-        //loadDataIntoViews(currentItem);
+            //loadDataIntoViews(currentItem);
+        }catch (Exception e){
+            e.printStackTrace();
+            Toast.makeText(this,e.getMessage(),Toast.LENGTH_SHORT).show();
+        }
 
     }
 
@@ -161,7 +168,6 @@ public class UserProfileActivity extends AppCompatActivity {
     }
 
     private void loadDataIntoViews(final UserItem userItem) {
-
         // Check if a user is verified
         if(userItem.isVerified){
             verifiedIcon.setVisibility(View.VISIBLE);
@@ -582,42 +588,6 @@ public class UserProfileActivity extends AppCompatActivity {
 
     private void loadAds() {
         adRequest = MainActivity.adRequest;
-        adLoader = new AdLoader.Builder(this,getString(R.string.native_ad_unit_id))
-                .forUnifiedNativeAd(new UnifiedNativeAd.OnUnifiedNativeAdLoadedListener() {
-                    @Override
-                    public void onUnifiedNativeAdLoaded(UnifiedNativeAd unifiedNativeAd) {
-                        nativeAdView = (UnifiedNativeAdView)getLayoutInflater().inflate(R.layout.native_ad_layout,null,false);
-                        mapNativeAdToLayout(unifiedNativeAd, nativeAdView);
-
-                        FrameLayout nativeAdLayout = findViewById(R.id.native_ad);
-                        nativeAdLayout.removeAllViews();
-                        nativeAdLayout.addView(nativeAdView);
-                    }
-                })
-                .withAdListener(new AdListener(){
-                    @Override
-                    public void onAdLoaded() {
-                        super.onAdLoaded();
-                        if(isDestroyed()){
-                            if(nativeAdView != null) nativeAdView.destroy();
-                        }
-                    }
-
-                    @Override
-                    public void onAdFailedToLoad(int i) {
-                        super.onAdFailedToLoad(i);
-
-                        new Handler().postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                if(isNetworkConnected(UserProfileActivity.this))adLoader.loadAd(adRequest);
-                            }
-                        },AD_RELOAD_DELAY);
-                    }
-                })
-                .build();
-
-        adLoader.loadAd(adRequest);
 
         mInterstitialAd = new InterstitialAd(this);
         mInterstitialAd.setAdUnitId(getString(R.string.interstitial_ad_unit_id));
@@ -630,15 +600,14 @@ public class UserProfileActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onAdFailedToLoad(int i) {
-                super.onAdFailedToLoad(i);
+            public void onAdFailedToLoad(LoadAdError loadAdError) {
+                super.onAdFailedToLoad(loadAdError);
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         if(isNetworkConnected(UserProfileActivity.this)) mInterstitialAd.loadAd(adRequest);
                     }
                 },AD_RELOAD_DELAY);
-
             }
         });
 
@@ -648,7 +617,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
     }
 
-    private void mapNativeAdToLayout(UnifiedNativeAd adFromGoogle, UnifiedNativeAdView adView) {
+    public static void mapNativeAdToLayout(UnifiedNativeAd adFromGoogle, UnifiedNativeAdView adView) {
 
         adView.setMediaView((MediaView)adView.findViewById(R.id.ad_media));
 
@@ -737,9 +706,10 @@ public class UserProfileActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if(MainActivity.isShowingAds && mInterstitialAd.isLoaded() && shouldShowInterstitial()){
-            mInterstitialAd.show();
+        if(MainActivity.isShowingAds && shouldShowInterstitial() && mInterstitialAd != null && mInterstitialAd.isLoaded()){
+
             MainActivity.lastTimeShownInterstitial = System.currentTimeMillis();
+
         }else{
             super.onBackPressed();
         }

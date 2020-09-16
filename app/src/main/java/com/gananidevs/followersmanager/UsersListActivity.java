@@ -71,9 +71,6 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
     private boolean isAdLoaded = false;
     private InterstitialAd mInterstitialAd;
 
-    //Helper object for moving between profiles in profile activity
-    UsersListHelper usersListHelper;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -86,11 +83,18 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
         else
             adView.setVisibility(View.GONE);
 
-        twitterSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
-        twitterApiClient = new MyTwitterApiClient(twitterSession);
-        listDescriptionTv = findViewById(R.id.activity_description_tv);
-
         progressBar = findViewById(R.id.users_list_progress_bar);
+
+        try {
+            twitterSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
+            twitterApiClient = new MyTwitterApiClient(twitterSession);
+        }catch (Exception e){
+            e.printStackTrace();
+            Toast.makeText(this,e.getMessage(),Toast.LENGTH_SHORT).show();
+            progressBar.setVisibility(View.GONE);
+        }
+
+        listDescriptionTv = findViewById(R.id.activity_description_tv);
 
         try {
             userItemsList = new ArrayList<>();
@@ -164,17 +168,6 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
             loadRecyclerViewData(0,userIdsList.size(),progressBar,recyclerAdapter,userIdsList);
         }
 
-        usersListHelper = new UsersListHelper() {
-            @Override
-            public UserItem getNextItem(int currentIndex) {
-                return userItemsList.get(currentIndex+1);
-            }
-
-            @Override
-            public UserItem getPreviousItem(int currentIndex) {
-                return userItemsList.get(currentIndex-1);
-            }
-        };
 
 
     }
@@ -491,7 +484,7 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
 
     @Override
     public void onBackPressed() {
-        if(MainActivity.isShowingAds && mInterstitialAd.isLoaded() && shouldShowInterstitial()){
+        if(MainActivity.isShowingAds && shouldShowInterstitial() && mInterstitialAd != null && mInterstitialAd.isLoaded()){
             mInterstitialAd.show();
             MainActivity.lastTimeShownInterstitial = System.currentTimeMillis();
         }else {

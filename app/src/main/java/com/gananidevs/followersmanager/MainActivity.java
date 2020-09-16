@@ -110,7 +110,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onCreate(savedInstanceState);
 
         MobileAds.initialize(this);
-        /*
+
         if(BuildConfig.DEBUG){
             List<String> testDeviceIds = Arrays.asList(TECNO_LB7_TEST_ID);
             RequestConfiguration configuration = new RequestConfiguration.Builder().setTestDeviceIds(testDeviceIds).build();
@@ -121,9 +121,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             lastTimeShownInterstitial = 0;
         }
 
-         */
-        adRequest = new AdRequest.Builder().build();
-        lastTimeShownInterstitial = 0;
+
+//        adRequest = new AdRequest.Builder().build();
+//        lastTimeShownInterstitial = 0;
 
         setContentView(R.layout.navigation_drawer);
 
@@ -177,7 +177,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
 
         }else{
-            startActivity(new Intent(this, WelcomeScreenActivity.class));
+            startActivityWithAnimation(new Intent(this, WelcomeScreenActivity.class));
             finish();
         }
 
@@ -854,7 +854,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void startActivityWithAnimation(Intent intent){
         startActivity(intent);
-        overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out);
+        overridePendingTransition(android.R.anim.fade_in,android.R.anim.slide_out_right);
     }
 
 
