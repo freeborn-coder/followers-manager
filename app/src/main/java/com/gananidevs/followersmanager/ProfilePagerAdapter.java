@@ -129,6 +129,7 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
         @Override
         public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
             View view = inflater.inflate(R.layout.pager_layout,container,false);
+            nativeAdView = (UnifiedNativeAdView)getLayoutInflater().inflate(R.layout.native_ad_layout,null,false);
             bindViewToUserItem(view);
             return view;
         }
@@ -438,7 +439,7 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
                     .forUnifiedNativeAd(new UnifiedNativeAd.OnUnifiedNativeAdLoadedListener() {
                         @Override
                         public void onUnifiedNativeAdLoaded(UnifiedNativeAd unifiedNativeAd) {
-                            nativeAdView = (UnifiedNativeAdView)getLayoutInflater().inflate(R.layout.native_ad_layout,null,false);
+
                             mapNativeAdToLayout(unifiedNativeAd, nativeAdView);
 
                             FrameLayout nativeAdLayout = view.findViewById(R.id.native_ad);
