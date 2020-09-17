@@ -159,7 +159,8 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
     class UsersViewHolder extends RecyclerView.ViewHolder{
 
         public final ImageView profileImage, verifiedIcon, dropDownArrow;
-        public final MaterialButton followUnfollowButton, followStatusButton;
+        public final MaterialButton followUnfollowButton;
+        public final Button followStatusButton;
         public final TextView nameTv;
         public final TextView screenNameTv, whitelistStatusTv;
         public final ProgressBar btnProgressBar;
@@ -469,7 +470,7 @@ public class UsersRecyclerAdapter extends RecyclerView.Adapter<UsersRecyclerAdap
             intent.putParcelableArrayListExtra(USERS_PARCELABLE_ARRAYLIST,userItemsList);
             intent.putExtra(CURRENT_USER_INDEX,userIndex);
             ctx.startActivity(intent);
-            ((AppCompatActivity)ctx).overridePendingTransition(android.R.anim.slide_in_left,android.R.anim.slide_out_right);
+            ((AppCompatActivity)ctx).overridePendingTransition(android.R.anim.fade_in,android.R.anim.slide_out_right);
         }
 
         public void removeCurrentItem(){

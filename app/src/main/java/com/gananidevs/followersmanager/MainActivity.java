@@ -88,7 +88,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     Boolean isLoading = true, hasFinishedBackgroundTask = false, waitingForBackgroundTask = false;
     private UserItem user;
 
-
     // REQUESTS LIMIT
     public static int apiRequestCount, keyActionsCount = 0;
 
@@ -850,7 +849,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         startActivity(intent);
         overridePendingTransition(android.R.anim.fade_in,android.R.anim.slide_out_right);
     }
-
 
 
     @Override

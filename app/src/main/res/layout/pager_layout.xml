@@ -89,24 +89,20 @@
                         app:layout_constraintTop_toBottomOf="@id/name_tv"
                         app:layout_constraintStart_toEndOf="@+id/profile_image" />
 
-                    <com.google.android.material.button.MaterialButton
+                    <androidx.appcompat.widget.AppCompatButton
                         android:id="@+id/follow_status_button"
                         android:layout_width="wrap_content"
-                        android:layout_height="31dp"
+                        android:layout_height="32dp"
                         android:backgroundTint="@color/mid_gray_777"
                         android:layout_marginTop="9dp"
                         android:text="@string/doesnt_follow_you"
-                        android:paddingStart="5dp"
-                        android:paddingEnd="5dp"
-                        android:paddingTop="0dp"
-                        android:paddingBottom="0dp"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
                         android:textColor="@android:color/white"
                         android:textSize="10sp"
+                        android:textAlignment="center"
                         android:textStyle="normal"
                         android:enabled="false"
                         android:clickable="false"
-                        app:cornerRadius="5dp"
                         app:layout_constraintStart_toStartOf="@id/screen_name_tv"
                         app:layout_constraintTop_toBottomOf="@id/screen_name_tv" />
 
@@ -189,7 +185,7 @@
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/follow_unfollow_button"
-                            android:layout_width="80dp"
+                            android:layout_width="82dp"
                             android:layout_height="42dp"
                             android:paddingStart="11dp"
                             android:paddingTop="3dp"

@@ -18,12 +18,18 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.android.play.core.review.ReviewInfo;
+import com.google.android.play.core.review.ReviewManager;
+import com.google.android.play.core.review.ReviewManagerFactory;
+import com.google.android.play.core.tasks.OnCompleteListener;
+import com.google.android.play.core.tasks.Task;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.TwitterException;
@@ -138,6 +144,23 @@ public class Helper {
 
     // Rate App Dialog
     private static void askUserToRateApp(final Context context) {
+
+        final ReviewManager manager = ReviewManagerFactory.create(context);
+        Task<ReviewInfo> request = manager.requestReviewFlow();
+        request.addOnCompleteListener(new OnCompleteListener<ReviewInfo>() {
+            @Override
+            public void onComplete(@NonNull Task<ReviewInfo> task) {
+                if (task.isSuccessful()) {
+
+                    // We can get the ReviewInfo object
+                    ReviewInfo reviewInfo = task.getResult();
+                    manager.launchReviewFlow((AppCompatActivity)context, reviewInfo);
+                }
+            }
+        });
+
+        /*
+
         final Dialog confirmDialog = new Dialog(context);
         View dialogView = LayoutInflater.from(context).inflate(R.layout.confirm_dialog_layout,null);
 
@@ -184,6 +207,7 @@ public class Helper {
         confirmDialog.setContentView(dialogView);
         confirmDialog.show();
 
+         */
     }
 
     static void goToAppStore(Context context) {
@@ -349,11 +373,12 @@ public class Helper {
 
     }
 
-    static void changeButtonTextAndColor(Context context, MaterialButton btn, int newText, int color){
+    static void changeButtonTextAndColor(Context context, Button btn, int newText, int color){
         btn.setText(context.getString(newText));
         Drawable background = btn.getBackground();
         background.setTint(context.getColor(color));
-        btn.setBackgroundDrawable(background);
+
+        btn.setBackground(background);
 
         //TypedValue.COMPLEX_UNIT_SP
     }

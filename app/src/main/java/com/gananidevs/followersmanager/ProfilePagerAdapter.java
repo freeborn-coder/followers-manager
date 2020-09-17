@@ -126,12 +126,26 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
             this.userItem = userItem;
         }
 
-        public ProfileFragment(){}
+        /*
+        public static ProfileFragment newInstance(UserItem userItem) {
+            ProfileFragment f = new ProfileFragment(userItem);
+            Bundle args = new Bundle();
+            args.putParcelable("user_item",userItem);
+            f.setArguments(args);
+            return f;
+        }*/
+
+        @Override
+        public void onSaveInstanceState(@NonNull Bundle outState) {
+            super.onSaveInstanceState(outState);
+            outState.putParcelable("user_item",this.userItem);
+        }
 
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            setRetainInstance(true);
+            //setRetainInstance(true);
+
         }
 
         @Nullable
@@ -140,7 +154,13 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
             View view = inflater.inflate(R.layout.pager_layout,container,false);
             nativeAdView = (UnifiedNativeAdView)getLayoutInflater().inflate(R.layout.native_ad_layout,null,false);
             nativeAdFrameLayout = view.findViewById(R.id.native_ad);
-            bindViewToUserItem(view);
+            if(savedInstanceState != null){
+                this.userItem = savedInstanceState.getParcelable("user_item");
+            }
+
+            if(this.userItem != null) {
+                bindViewToUserItem(view);
+            }
             return view;
         }
 
@@ -158,7 +178,7 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
             TextView followingCountTv = view.findViewById(R.id.following_count_tv);
             final TextView whitelistStatusTv = view.findViewById(R.id.whitelisted_status_tv);
             followUnfollowBtn = view.findViewById(R.id.follow_unfollow_button);
-            MaterialButton followStatusBtn = view.findViewById(R.id.follow_status_button);
+            Button followStatusBtn = view.findViewById(R.id.follow_status_button);
             TextView followersTv = view.findViewById(R.id.followers_tv);
             TextView followingTv = view.findViewById(R.id.following_tv);
             TextView descriptionEt = view.findViewById(R.id.description_et);

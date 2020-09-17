@@ -83,18 +83,15 @@
             android:visibility="gone"
             app:tint="@color/tw__solid_white" />
 
-        <com.google.android.material.button.MaterialButton
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/follow_status_button"
             android:layout_width="wrap_content"
             android:layout_height="35dp"
-            android:paddingTop="3dp"
             android:text="@string/doesnt_follow_you"
-            android:textAlignment="center"
-            android:textColor="#CCCCCC"
+            android:textColor="#eeeeee"
             android:textSize="11sp"
             android:enabled="false"
             android:clickable="false"
-            app:cornerRadius="5dp"
             android:layout_marginTop="5dp"
             android:textAppearance="@style/TextAppearance.AppCompat.Body2"
             android:backgroundTint="@color/main_activity_low_emphasis_text_color"
@@ -125,7 +122,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/follow_unfollow_button"
-                android:layout_width="80dp"
+                android:layout_width="82dp"
                 android:layout_height="42dp"
                 android:paddingStart="11dp"
                 android:paddingTop="3dp"

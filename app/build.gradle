@@ -8,8 +8,8 @@ android {
         applicationId "com.gananidevs.followersmanagerfortwitter"
         minSdkVersion 23
         targetSdkVersion 29
-        versionCode 2313104
-        versionName "1.0.4"
+        versionCode 2313105
+        versionName "1.0.5"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -52,5 +52,7 @@ dependencies {
 
     // Add the Firebase Crashlytics SDK.
     implementation 'com.google.firebase:firebase-crashlytics:17.2.1'
+
+    implementation 'com.google.android.play:core:1.8.0'
     
 }

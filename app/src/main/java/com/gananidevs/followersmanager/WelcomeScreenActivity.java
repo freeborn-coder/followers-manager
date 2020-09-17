@@ -44,7 +44,7 @@ public class WelcomeScreenActivity extends AppCompatActivity {
     private boolean isSignedIn = false;
     ProgressBar progressBar;
 
-    int currentAppVersionCode = 2313104; // Remember to update or increment this whenever you update your app.
+    int currentAppVersionCode = 2313105; // Remember to update or increment this whenever you update your app.
     int newestAppVersionCode;
     private Button loginButton;
 
