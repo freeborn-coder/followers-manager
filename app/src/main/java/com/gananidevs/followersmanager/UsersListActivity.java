@@ -19,10 +19,12 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.RequestConfiguration;
 import com.twitter.sdk.android.core.Callback;
@@ -31,6 +33,7 @@ import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
 
+import java.io.Serializable;
 import java.lang.ref.WeakReference;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -44,7 +47,7 @@ import static com.gananidevs.followersmanager.Helper.*;
 
 public class UsersListActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
 
-    ArrayList<UserItem> userItemsList; // itemslist is for the fully hydrated user itsms
+    ArrayList<UserItem> userItemsList; // itemslist is for the fully hydrated user items
     private LinearLayoutManager linearLayoutManager;
     public static boolean isLoading = true;
     public static ProgressBar progressBar;
@@ -73,7 +76,6 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_users_list);
 
-
         // get the Ad view
         adView = findViewById(R.id.banner_ad_view);
         if(MainActivity.isShowingAds)
@@ -81,12 +83,18 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
         else
             adView.setVisibility(View.GONE);
 
-
-        twitterSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
-        twitterApiClient = new MyTwitterApiClient(twitterSession);
-        listDescriptionTv = findViewById(R.id.activity_description_tv);
-
         progressBar = findViewById(R.id.users_list_progress_bar);
+
+        try {
+            twitterSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
+            twitterApiClient = new MyTwitterApiClient(twitterSession);
+        }catch (Exception e){
+            e.printStackTrace();
+            Toast.makeText(this,e.getMessage(),Toast.LENGTH_SHORT).show();
+            progressBar.setVisibility(View.GONE);
+        }
+
+        listDescriptionTv = findViewById(R.id.activity_description_tv);
 
         try {
             userItemsList = new ArrayList<>();
@@ -160,9 +168,12 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
             loadRecyclerViewData(0,userIdsList.size(),progressBar,recyclerAdapter,userIdsList);
         }
 
+
+
     }
 
     private void loadAds() {
+
 
         adView.setAdListener(new AdListener() {
             @Override
@@ -172,14 +183,16 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
             }
 
             @Override
-            public void onAdFailedToLoad(int i) {
-                super.onAdFailedToLoad(i);
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        if(isNetworkConnected(UsersListActivity.this)) adView.loadAd(MainActivity.adRequest);
-                    }
-                },AD_RELOAD_DELAY);
+            public void onAdFailedToLoad(LoadAdError loadAdError) {
+                super.onAdFailedToLoad(loadAdError);
+
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            if(isNetworkConnected(UsersListActivity.this)) adView.loadAd(MainActivity.adRequest);
+                        }
+                    },AD_RELOAD_DELAY);
+
             }
 
             @Override
@@ -192,7 +205,10 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
 
         mInterstitialAd = new InterstitialAd(this);
         mInterstitialAd.setAdUnitId(getString(R.string.interstitial_ad_unit_id));
-        mInterstitialAd.loadAd(MainActivity.adRequest);
+
+        if(shouldShowInterstitial()) {
+            mInterstitialAd.loadAd(MainActivity.adRequest);
+        }
 
         mInterstitialAd.setAdListener(new AdListener() {
             @Override
@@ -458,7 +474,7 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        String listName = getIntent().getStringExtra(LIST_NAME);
+        //String listName = getIntent().getStringExtra(LIST_NAME);
 
         if(item.getItemId() == android.R.id.home){
             onBackPressed();
@@ -468,8 +484,9 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
 
     @Override
     public void onBackPressed() {
-        if(MainActivity.isShowingAds && mInterstitialAd.isLoaded()){
+        if(MainActivity.isShowingAds && shouldShowInterstitial() && mInterstitialAd != null && mInterstitialAd.isLoaded()){
             mInterstitialAd.show();
+            MainActivity.lastTimeShownInterstitial = System.currentTimeMillis();
         }else {
             super.onBackPressed();
         }
@@ -538,13 +555,4 @@ public class UsersListActivity extends AppCompatActivity implements SearchView.O
         super.onStart();
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if(MainActivity.isShowingAds && !mInterstitialAd.isLoaded()){
-            if(isNetworkConnected(this)){
-                mInterstitialAd.loadAd(MainActivity.adRequest);
-            }
-        }
-    }
 }

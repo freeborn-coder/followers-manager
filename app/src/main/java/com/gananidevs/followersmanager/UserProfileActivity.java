@@ -6,6 +6,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
+import androidx.viewpager.widget.ViewPager;
 
 import android.Manifest;
 import android.animation.Animator;
@@ -42,6 +43,7 @@ import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdLoader;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.RequestConfiguration;
 import com.google.android.gms.ads.formats.MediaView;
@@ -83,6 +85,7 @@ import static com.gananidevs.followersmanager.Helper.incrementApiRequestCount;
 import static com.gananidevs.followersmanager.Helper.insertCommas;
 import static com.gananidevs.followersmanager.Helper.isNetworkConnected;
 import static com.gananidevs.followersmanager.Helper.proceedWithApiCall;
+import static com.gananidevs.followersmanager.Helper.shouldShowInterstitial;
 import static com.gananidevs.followersmanager.Helper.showRequestFollowBackBottomSheetDialog;
 import static com.gananidevs.followersmanager.Helper.showSnackBar;
 import static com.gananidevs.followersmanager.UsersRecyclerAdapter.hideProgressShowButtonText;
@@ -111,10 +114,12 @@ public class UserProfileActivity extends AppCompatActivity {
     private InterstitialAd mInterstitialAd;
     private BottomSheetDialog dialog;
     private MyTwitterApiClient twitterApiClient;
-    private ProgressBar progressBar;
+    public static ProgressBar progressBar;
     private DatabaseReference databaseReference;
     private AdLoader adLoader;
     private AdRequest adRequest;
+    private ProfilePagerAdapter profilePagerAdapter;
+    private ViewPager viewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -125,18 +130,31 @@ public class UserProfileActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         setActionBarTitle(getString(R.string.profile));
 
-        if(MainActivity.isShowingAds)
+        if(MainActivity.isShowingAds) {
             loadAds();
+        }
 
+        //initializeViews();
+        try {
+            twitterSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
+            twitterApiClient = new MyTwitterApiClient(twitterSession);
 
-        initializeViews();
-        twitterSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
-        twitterApiClient = new MyTwitterApiClient(twitterSession);
+            userItemArrayList = getIntent().getParcelableArrayListExtra(USERS_PARCELABLE_ARRAYLIST);
+            currentUserIndex = getIntent().getIntExtra(CURRENT_USER_INDEX, 0);
+            currentItem = userItemArrayList.get(currentUserIndex);
 
-        userItemArrayList = getIntent().getParcelableArrayListExtra(USERS_PARCELABLE_ARRAYLIST);
-        currentUserIndex = getIntent().getIntExtra(CURRENT_USER_INDEX,0);
-        currentItem = userItemArrayList.get(currentUserIndex);
-        loadDataIntoViews(currentItem);
+            viewPager = findViewById(R.id.view_pager);
+            progressBar = findViewById(R.id.progress_bar);
+            profilePagerAdapter = new ProfilePagerAdapter(getSupportFragmentManager(), userItemArrayList);
+            viewPager.setAdapter(profilePagerAdapter);
+            viewPager.setCurrentItem(currentUserIndex);
+            viewPager.setPageMargin(10);
+
+            //loadDataIntoViews(currentItem);
+        }catch (Exception e){
+            e.printStackTrace();
+            Toast.makeText(this,e.getMessage(),Toast.LENGTH_SHORT).show();
+        }
 
     }
 
@@ -147,297 +165,6 @@ public class UserProfileActivity extends AppCompatActivity {
         }catch (Exception e){
             e.printStackTrace();
         }
-    }
-
-    private void loadDataIntoViews(final UserItem userItem) {
-
-        // Check if a user is verified
-        if(userItem.isVerified){
-            verifiedIcon.setVisibility(View.VISIBLE);
-        }else{
-            verifiedIcon.setVisibility(View.GONE);
-        }
-
-        if(twitterSession.getUserId() == userItem.id) {
-            followStatusBtn.setVisibility(View.GONE);
-            followUnfollowBtn.setVisibility(View.GONE);
-        }else {
-            followStatusBtn.setVisibility(View.VISIBLE);
-            followUnfollowBtn.setVisibility(View.VISIBLE);
-
-            // check if the user is a follower for follow status button
-            if (Helper.isFollower(userItem.id)) {
-                changeButtonTextAndColor(this, followStatusBtn, R.string.follows_you, R.color.green);
-            } else {
-                changeButtonTextAndColor(this, followStatusBtn, R.string.doesnt_follow_you, R.color.mid_gray_777);
-            }
-
-        }
-
-        // check if you are following the user or not for follow or unfollow button
-        if(Helper.isFriend(userItem.id)){
-            changeButtonTextAndColor(this,followUnfollowBtn,R.string.unfollow_all_lowercase,R.color.colorAccent);
-        }else{
-            changeButtonTextAndColor(this,followUnfollowBtn,R.string.follow_all_lowercase,R.color.follow_btn_back_color);
-        }
-
-        try{
-            Glide.with(this).load(userItem.profileImageUrlHttps).into(profileImage);
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-
-        nameTv.setText(userItem.name);
-        String screenName = "@"+ userItem.screenName;
-        screenNameTv.setText(screenName);
-
-        followersCountTv.setText(insertCommas(userItem.followersCount));
-        followingCountTv.setText(insertCommas(userItem.friendsCount));
-
-        TextClickListener textClickListener = new TextClickListener();
-        followingCountTv.setOnClickListener(textClickListener);
-        followersCountTv.setOnClickListener(textClickListener);
-        followingTv.setOnClickListener(textClickListener);
-        followersTv.setOnClickListener(textClickListener);
-
-        descriptionEt.setText(userItem.description);
-        locationEt.setText(userItem.location);
-        userLinkEt.setText(userItem.url);
-        dateCreatedEt.setText(userItem.createdAt);
-
-        twitterLinkTv.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://twitter.com/"+ userItem.screenName));
-                    startActivity(intent);
-                }catch (Exception e){
-                    e.printStackTrace();
-                    if( BuildConfig.DEBUG){
-                        Toast.makeText(UserProfileActivity.this,e.getMessage(),Toast.LENGTH_SHORT).show();
-                    }
-                }
-            }
-
-        });
-
-        if(Helper.isWhielisted(userItem.id)){
-            whitelistStatusTv.setVisibility(View.VISIBLE);
-        }else{
-            whitelistStatusTv.setVisibility(View.GONE);
-        }
-
-        linkIcon.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-            try {
-                if(!userItem.url.isEmpty()) {
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(userItem.url));
-                    startActivity(intent);
-                }
-            }catch (Exception e){e.printStackTrace();
-                Toast.makeText(UserProfileActivity.this,e.getMessage(),Toast.LENGTH_SHORT).show();
-            }
-            }
-        });
-
-        popupIcon.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                PopupMenu popupMenu = new PopupMenu(UserProfileActivity.this,v);
-                Menu menu = popupMenu.getMenu();
-                menu.add(getString(R.string.view_followers));
-                menu.add(getString(R.string.view_following));
-                menu.add(getString(R.string.just_view_on_twitter));
-
-                // Add menu options
-                if(userItem.id != twitterSession.getUserId()) {
-                    if (!Helper.isFollower(userItem.id)) {
-
-                        if(Helper.isFriend(userItem.id)) {
-                            menu.add(getString(R.string.request_follow_back));
-
-                            if (Helper.isWhielisted(userItem.id)) {
-                                menu.add(getString(R.string.remove_from_whitelist));
-                            } else {
-                                menu.add(getString(R.string.add_to_whitelist));
-                            }
-                        }
-
-                    }
-                }
-
-                // Add menu actions
-                popupMenu.setOnMenuItemClickListener(new MyPopMenuItemClickListener());
-                popupMenu.show();
-
-            }
-        });
-
-        // what follow/unfollow button click handler
-        followUnfollowBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                final Long userId = userItem.id;
-                final String userScreenName = userItem.screenName;
-
-                // follow or unfollow users as neccessary
-                String btnText = followUnfollowBtn.getText().toString();
-
-                long interval = System.currentTimeMillis() - MainActivity.last15MinTimeStamp;
-                if(proceedWithApiCall(interval)) {
-
-                    if (btnText.equals(getString(R.string.follow_all_lowercase))) {
-                        // follow the specific user
-                        showProgressHideButtonText(btnProgressBar, followUnfollowBtn, UserProfileActivity.this);
-
-                        int delay = new Random().nextInt(1000) + 1000;
-                        new Handler().postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                followUser(userId);
-                            }
-                        }, delay);
-
-                    } else if (btnText.equals(getString(R.string.unfollow_all_lowercase))) {
-
-                        // unfollow the specified user
-                        final Dialog confirmDialog = new Dialog(UserProfileActivity.this);
-                        View dialogView = getLayoutInflater().inflate(R.layout.confirm_dialog_layout,null,false);
-                        TextView confirmMessage = dialogView.findViewById(R.id.message_tv);
-                        confirmMessage.setText("unfollow "+userScreenName+"?");
-                        Button positiveBtn = dialogView.findViewById(R.id.positive_btn);
-                        positiveBtn.setText(R.string.yes);
-                        positiveBtn.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                confirmDialog.dismiss();
-                                showProgressHideButtonText(btnProgressBar, followUnfollowBtn, UserProfileActivity.this);
-                                int delay = new Random().nextInt(1000) + 1500;
-                                new Handler().postDelayed(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        unfollowUser(userId);
-                                    }
-                                }, delay);
-                            }
-                        });
-
-                        Button negativeBtn = dialogView.findViewById(R.id.negative_btn);
-                        negativeBtn.setText(R.string.cancel);
-                        negativeBtn.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                confirmDialog.dismiss();
-                            }
-                        });
-                        confirmDialog.setContentView(dialogView);
-                        confirmDialog.show();
-
-                        /*
-                        // unfollow the specified user
-                        new AlertDialog.Builder(UserProfileActivity.this).setTitle("confirm action")
-                                .setMessage(getString(R.string.unfollow_all_lowercase) + " " + userScreenName + "?")
-                                .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        showProgressHideButtonText(btnProgressBar, followUnfollowBtn, UserProfileActivity.this);
-
-                                        int delay = new Random().nextInt(1000) + 1000;
-                                        new Handler().postDelayed(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                unfollowUser(userId);
-                                            }
-                                        }, delay);
-
-                                    }
-                                }).setNegativeButton(getString(R.string.cancel), null)
-                                .show();
-
-                         */
-                    }
-
-                }else{ // Request count is >= 15 within 15 minutes, so do not proceed with request
-                    if(btnText.equals(getString(R.string.unfollow_all_lowercase))){
-                        // show alert dialog then waste time for nothing :)
-                        showDialogAndFeignWork(userScreenName);
-                    }else{
-                        placeboAction();
-                    }
-                }
-
-
-            }
-        });
-
-        // Profile image click handler
-        profileImage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                final Dialog photoDialog = new Dialog(UserProfileActivity.this,android.R.style.Theme_DeviceDefault_NoActionBar);
-                View dialogView = getLayoutInflater().inflate(R.layout.user_photo_dialog,null,false);
-                isImageLoaded = false;
-
-                final ImageView dialogImage = dialogView.findViewById(R.id.user_profile_image);
-
-                Glide.with(UserProfileActivity.this).load(userItem.profileImageUrlHttps.replace("_normal","")).listener(new RequestListener<Drawable>() {
-                    @Override
-                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
-                        isImageLoaded = true;
-                        return false;
-                    }
-                }).into(dialogImage);
-
-                ImageView downloadIcon = dialogView.findViewById(R.id.download_icon);
-                ImageView closeIcon = dialogView.findViewById(R.id.close_icon);
-
-                downloadIcon.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-
-                        if(isImageLoaded) {
-                            try {
-                                dialogImage.setDrawingCacheEnabled(true);
-                                bitmap = dialogImage.getDrawingCache();
-                                imageTitle = System.currentTimeMillis() + userItem.screenName;
-                                imageDescription = userItem.screenName + " profile photo from followers manager app";
-
-                                if(Build.VERSION.SDK_INT >= 23){
-                                    if(checkWritePermission()){
-                                        saveImage(bitmap, imageTitle, imageDescription);
-                                    }
-                                }else{
-                                    saveImage(bitmap, imageTitle, imageDescription);
-                                }
-
-                            }catch(Exception e){
-                                Toast.makeText(UserProfileActivity.this,e.getMessage(),Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    }
-                });
-
-                closeIcon.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        photoDialog.dismiss();
-                    }
-                });
-
-                photoDialog.setContentView(dialogView);
-                photoDialog.show();
-
-            }
-        });
-
-        progressBar.setVisibility(View.GONE);
-
     }
 
     private void showDialogAndFeignWork(String userScreenName) {
@@ -477,7 +204,6 @@ public class UserProfileActivity extends AppCompatActivity {
     }
 
 
-
     private void saveImage(Bitmap bitmap, String title, String description) {
         try {
             if (MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, title, description) != null) {
@@ -489,147 +215,8 @@ public class UserProfileActivity extends AppCompatActivity {
         }
     }
 
-    class TextClickListener implements View.OnClickListener{
-
-        @Override
-        public void onClick(View v) {
-            int id = v.getId();
-
-            if(id == followersCountTv.getId() || id == followersTv.getId()){
-                // view user's followers
-                viewUserFollowers();
-
-            }else if(id == followingCountTv.getId() || id == followingTv.getId()){
-                //view user's following
-                viewUserFollowing();
-            }
-
-        }
-    }
-
-    private void viewUserFollowing() {
-        Intent intent = new Intent(UserProfileActivity.this,UsersListActivity.class);
-        intent.putExtra(LIST_NAME,A_USERS_FOLLOWING);
-        intent.putExtra(USER_ID, currentItem.id);
-        intent.putExtra(SCREEN_NAME_OF_USER, currentItem.screenName);
-        startActivity(intent);
-    }
-
-    private void viewUserFollowers() {
-        Intent intent = new Intent(UserProfileActivity.this,UsersListActivity.class);
-        intent.putExtra(LIST_NAME,A_USERS_FOLLOWERS);
-        intent.putExtra(USER_ID, currentItem.id);
-        intent.putExtra(SCREEN_NAME_OF_USER, currentItem.screenName);
-        startActivity(intent);
-    }
-
-    private void followUser(final Long userId) {
-
-        twitterApiClient.getFriendshipsCreateCustomService().post(userId).enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void success(Result<ResponseBody> result) {
-                hideProgressShowButtonText(btnProgressBar,followUnfollowBtn,UserProfileActivity.this);
-                followUnfollowBtn.setText(getString(R.string.unfollow_all_lowercase));
-                changeButtonTextAndColor(UserProfileActivity.this,followUnfollowBtn,R.string.unfollow_all_lowercase,R.color.colorAccent);
-                MainActivity.friendsIdsList.add(userId);
-                incrementApiRequestCount(UserProfileActivity.this);
-            }
-
-            @Override
-            public void failure(TwitterException exception) {
-                hideProgressShowButtonText(btnProgressBar,followUnfollowBtn,UserProfileActivity.this);
-                Toast.makeText(UserProfileActivity.this,exception.getMessage(),Toast.LENGTH_SHORT).show();
-            }
-        });
-
-    }
-
-    private void unfollowUser(final Long userId){
-
-        twitterApiClient.getFriendshipsDestroyCustomService().post(userId).enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void success(Result<ResponseBody> result) {
-                hideProgressShowButtonText(btnProgressBar,followUnfollowBtn,UserProfileActivity.this);
-                followUnfollowBtn.setText(getString(R.string.unfollow_all_lowercase));
-                changeButtonTextAndColor(UserProfileActivity.this,followUnfollowBtn,R.string.follow_all_lowercase,R.color.follow_btn_back_color);
-                MainActivity.friendsIdsList.remove(userId);
-                incrementApiRequestCount(UserProfileActivity.this);
-            }
-
-            @Override
-            public void failure(TwitterException exception) {
-                hideProgressShowButtonText(btnProgressBar,followUnfollowBtn,UserProfileActivity.this);
-                Toast.makeText(UserProfileActivity.this,exception.getMessage(),Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void initializeViews() {
-        dialog = new BottomSheetDialog(UserProfileActivity.this);
-
-        popupIcon = findViewById(R.id.popup_icon);
-        profileImage = findViewById(R.id.profile_image);
-        verifiedIcon = findViewById(R.id.verified_icon);
-        nameTv = findViewById(R.id.name_tv);
-        screenNameTv = findViewById(R.id.screen_name_tv);
-        followersCountTv = findViewById(R.id.followers_count_tv);
-        followingCountTv = findViewById(R.id.following_count_tv);
-        whitelistStatusTv = findViewById(R.id.whitelisted_status_tv);
-        followUnfollowBtn = findViewById(R.id.follow_unfollow_button);
-        followStatusBtn = findViewById(R.id.follow_status_button);
-        followersTv = findViewById(R.id.followers_tv);
-        followingTv = findViewById(R.id.following_tv);
-        descriptionEt = findViewById(R.id.description_et);
-        locationEt = findViewById(R.id.location_et);
-        dateCreatedEt = findViewById(R.id.date_et);
-        userLinkEt = findViewById(R.id.link_et);
-        twitterLinkTv = findViewById(R.id.twitter_link_tv);
-        linkIcon = findViewById(R.id.link_icon);
-        btnProgressBar = findViewById(R.id.btn_progress_bar);
-        followersTv = findViewById(R.id.followers_tv);
-        followingTv = findViewById(R.id.following_tv);
-        constraintLayout = findViewById(R.id.constraint_layout);
-        progressBar = findViewById(R.id.progress_bar);
-    }
-
     private void loadAds() {
         adRequest = MainActivity.adRequest;
-        adLoader = new AdLoader.Builder(this,getString(R.string.native_ad_unit_id))
-                .forUnifiedNativeAd(new UnifiedNativeAd.OnUnifiedNativeAdLoadedListener() {
-                    @Override
-                    public void onUnifiedNativeAdLoaded(UnifiedNativeAd unifiedNativeAd) {
-                        nativeAdView = (UnifiedNativeAdView)getLayoutInflater().inflate(R.layout.native_ad_layout,null,false);
-                        mapNativeAdToLayout(unifiedNativeAd, nativeAdView);
-
-                        FrameLayout nativeAdLayout = findViewById(R.id.native_ad);
-                        nativeAdLayout.removeAllViews();
-                        nativeAdLayout.addView(nativeAdView);
-                    }
-                })
-                .withAdListener(new AdListener(){
-                    @Override
-                    public void onAdLoaded() {
-                        super.onAdLoaded();
-                        if(isDestroyed()){
-                            if(nativeAdView != null) nativeAdView.destroy();
-                        }
-                    }
-
-                    @Override
-                    public void onAdFailedToLoad(int i) {
-                        super.onAdFailedToLoad(i);
-
-                        new Handler().postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                if(isNetworkConnected(UserProfileActivity.this))adLoader.loadAd(adRequest);
-                            }
-                        },AD_RELOAD_DELAY);
-                    }
-                })
-                .build();
-
-        adLoader.loadAd(adRequest);
 
         mInterstitialAd = new InterstitialAd(this);
         mInterstitialAd.setAdUnitId(getString(R.string.interstitial_ad_unit_id));
@@ -642,23 +229,24 @@ public class UserProfileActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onAdFailedToLoad(int i) {
-                super.onAdFailedToLoad(i);
+            public void onAdFailedToLoad(LoadAdError loadAdError) {
+                super.onAdFailedToLoad(loadAdError);
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         if(isNetworkConnected(UserProfileActivity.this)) mInterstitialAd.loadAd(adRequest);
                     }
                 },AD_RELOAD_DELAY);
-
             }
         });
 
-        mInterstitialAd.loadAd(adRequest);
+        if(shouldShowInterstitial()) {
+            mInterstitialAd.loadAd(adRequest);
+        }
 
     }
 
-    private void mapNativeAdToLayout(UnifiedNativeAd adFromGoogle, UnifiedNativeAdView adView) {
+    public static void mapNativeAdToLayout(UnifiedNativeAd adFromGoogle, UnifiedNativeAdView adView) {
 
         adView.setMediaView((MediaView)adView.findViewById(R.id.ad_media));
 
@@ -734,90 +322,11 @@ public class UserProfileActivity extends AppCompatActivity {
         int itemId = item.getItemId();
 
         if(itemId == R.id.action_previous){
-            // move to the previous useritem in the list
-            if(currentUserIndex > 0) {
-                --currentUserIndex;
-                currentItem = userItemArrayList.get(currentUserIndex);
-
-                constraintLayout.animate().alpha(0f).setDuration(1000).setListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        super.onAnimationEnd(animation);
-                        constraintLayout.animate().alpha(1).setDuration(1000).setStartDelay(ANIM_START_DELAY).setListener(new Animator.AnimatorListener() {
-                            @Override
-                            public void onAnimationStart(Animator animation) {
-                                loadDataIntoViews(currentItem);
-                            }
-
-                            @Override
-                            public void onAnimationEnd(Animator animation) {
-
-                            }
-
-                            @Override
-                            public void onAnimationCancel(Animator animation) {
-
-                            }
-
-                            @Override
-                            public void onAnimationRepeat(Animator animation) {
-
-                            }
-                        });
-                    }
-                });
-
-            }else{
-                // we have gotten to the end of the list, can't go any further
-                Toast.makeText(this,getString(R.string.end_reached),Toast.LENGTH_SHORT).show();
-            }
+            viewPager.setCurrentItem(viewPager.getCurrentItem()-1);
 
         }else if(itemId == R.id.action_next){
+            viewPager.setCurrentItem(viewPager.getCurrentItem()+1);
 
-            if(currentUserIndex < userItemArrayList.size()-1) {
-                // move to the next item in the list, if there is any
-                ++currentUserIndex;
-                currentItem = userItemArrayList.get(currentUserIndex);
-
-                if(!currentItem.isSuspendedUser) {
-
-                    constraintLayout.animate().alpha(0f).setDuration(1000).setListener(new AnimatorListenerAdapter() {
-                        @Override
-                        public void onAnimationEnd(Animator animation) {
-                            super.onAnimationEnd(animation);
-                            constraintLayout.animate().alpha(1).setDuration(1000).setStartDelay(ANIM_START_DELAY).setListener(new Animator.AnimatorListener() {
-                                @Override
-                                public void onAnimationStart(Animator animation) {
-                                    loadDataIntoViews(currentItem);
-                                }
-
-                                @Override
-                                public void onAnimationEnd(Animator animation) {
-
-                                }
-
-                                @Override
-                                public void onAnimationCancel(Animator animation) {
-
-                                }
-
-                                @Override
-                                public void onAnimationRepeat(Animator animation) {
-
-                                }
-                            });
-                        }
-                    });
-
-                }else{
-                    --currentUserIndex;
-                    Toast.makeText(this, getString(R.string.end_reached), Toast.LENGTH_SHORT).show();
-                }
-
-            }else {
-                // we have gotten to the end of the list, can't go any further
-                Toast.makeText(this, getString(R.string.end_reached), Toast.LENGTH_SHORT).show();
-            }
         }else if(item.getItemId() == android.R.id.home){
             onBackPressed();
         }
@@ -826,8 +335,10 @@ public class UserProfileActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if(MainActivity.isShowingAds && mInterstitialAd.isLoaded()){
-            mInterstitialAd.show();
+        if(MainActivity.isShowingAds && shouldShowInterstitial() && mInterstitialAd != null && mInterstitialAd.isLoaded()){
+
+            MainActivity.lastTimeShownInterstitial = System.currentTimeMillis();
+
         }else{
             super.onBackPressed();
         }
@@ -843,110 +354,10 @@ public class UserProfileActivity extends AppCompatActivity {
 
     }
 
-    private class MyPopMenuItemClickListener implements PopupMenu.OnMenuItemClickListener {
-
-
-        @Override
-        public boolean onMenuItemClick(MenuItem item) {
-            String title = item.getTitle().toString();
-
-            if(title.equals(getString(R.string.add_to_whitelist))){
-                // Add tow whitelist
-                progressBar.setVisibility(View.VISIBLE);
-                addCurrentItemToWhitelist();
-
-            }else if(title.equals(getString(R.string.remove_from_whitelist))){
-                // Remove current user from whitelist
-                progressBar.setVisibility(View.VISIBLE);
-                removeCurrentItemFromWhiteList();
-
-            }else if(title.equals(getString(R.string.view_followers))){
-                // view user's followers
-                viewUserFollowers();
-
-            }else if(title.equals(getString(R.string.view_following))){
-                // view user's following
-                viewUserFollowing();
-
-            }else if(title.equals(getString(R.string.request_follow_back))){
-                // Ask the user to follow back
-                showRequestFollowBackBottomSheetDialog(UserProfileActivity.this,currentItem.screenName, dialog,twitterApiClient,progressBar);
-            }else if(title.equals(getString(R.string.just_view_on_twitter))){
-                //view profile on twitter
-                try {
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://twitter.com/"+ currentItem.screenName));
-                    startActivity(intent);
-                }catch (Exception e){
-                    e.printStackTrace();
-                    if( BuildConfig.DEBUG){
-                        Toast.makeText(UserProfileActivity.this,e.getMessage(),Toast.LENGTH_SHORT).show();
-                    }
-                }
-
-            }
-            return true;
-        }
-
-    }
-
-    private void removeCurrentItemFromWhiteList() {
-
-        databaseReference = FirebaseUtil.openDbReference("whitelist/" + twitterSession.getUserId()+"/"+currentItem.id);
-
-        databaseReference.removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-
-                if(task.isSuccessful()){
-                    ++MainActivity.keyActionsCount;
-                    Toast.makeText(UserProfileActivity.this,currentItem.screenName+" removed successfully",Toast.LENGTH_SHORT).show();
-
-                    if(MainActivity.remindUserToRateApp){
-                        checkWhetherToAskUserToRateApp(UserProfileActivity.this);
-                    }
-                    whitelistStatusTv.setVisibility(View.GONE);
-
-                }else{
-                    progressBar.setVisibility(View.GONE);
-                    Toast.makeText(UserProfileActivity.this,task.getException().getMessage(),Toast.LENGTH_SHORT).show();
-                }
-                progressBar.setVisibility(View.GONE);
-            }
-        });
-    }
-
-    private void addCurrentItemToWhitelist() {
-        Long signedInUserId = twitterSession.getUserId();
-        final Long whitelistedUserId = currentItem.id;
-        databaseReference = FirebaseUtil.openDbReference("whitelist/"+signedInUserId+"/"+whitelistedUserId);
-        databaseReference.setValue(currentItem.screenName).addOnCompleteListener(new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-
-                if(task.isSuccessful()){
-                    MainActivity.nonFollowersIdsList.remove(whitelistedUserId);
-                    Toast.makeText(UserProfileActivity.this,currentItem.screenName+" added to whitelist",Toast.LENGTH_SHORT).show();
-                    ++MainActivity.keyActionsCount;
-
-                    if(MainActivity.remindUserToRateApp){
-                        checkWhetherToAskUserToRateApp(UserProfileActivity.this);
-                    }
-
-                    whitelistStatusTv.setVisibility(View.VISIBLE);
-                }else{
-                    Toast.makeText(UserProfileActivity.this, Objects.requireNonNull(task.getException()).getMessage(),Toast.LENGTH_SHORT).show();
-                }
-
-                progressBar.setVisibility(View.GONE);
-
-            }
-        });
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
-        if(MainActivity.isShowingAds && !mInterstitialAd.isLoaded()){
+        if(MainActivity.isShowingAds && mInterstitialAd != null && !mInterstitialAd.isLoaded()){
             if(isNetworkConnected(this)){
                 mInterstitialAd.loadAd(adRequest);
             }

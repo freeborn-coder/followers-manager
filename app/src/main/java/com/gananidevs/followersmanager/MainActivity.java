@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public static boolean remindUserToRateApp = true;
 
     public static SharedPreferences sp;
-    public static long last15MinTimeStamp, lastTimeAskedUserToRateApp;
+    public static long last15MinTimeStamp, lastTimeAskedUserToRateApp, lastTimeShownInterstitial;
     static String followersIdsFileName;
     private static File followersIdsFile;
     Dialog loadingDialog;
@@ -110,6 +110,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onCreate(savedInstanceState);
 
         MobileAds.initialize(this);
+
+        /*
         if(BuildConfig.DEBUG){
             List<String> testDeviceIds = Arrays.asList(TECNO_LB7_TEST_ID);
             RequestConfiguration configuration = new RequestConfiguration.Builder().setTestDeviceIds(testDeviceIds).build();
@@ -117,20 +119,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             adRequest = new AdRequest.Builder().addTestDevice(TECNO_LB7_TEST_ID).build();
         }else{
             adRequest = new AdRequest.Builder().build();
+            lastTimeShownInterstitial = 0;
         }
+
+         */
+
+        adRequest = new AdRequest.Builder().build();
+        lastTimeShownInterstitial = 0;
 
         setContentView(R.layout.navigation_drawer);
 
         // load shardPrefs manager
         sp = PreferenceManager.getDefaultSharedPreferences(this);
-        /*
-        if(BuildConfig.DEBUG) {
-            StrictMode.ThreadPolicy threadPolicy = new StrictMode.ThreadPolicy.Builder().detectNetwork().detectDiskReads().detectDiskWrites().penaltyLog().penaltyFlashScreen().build();
-            StrictMode.setThreadPolicy(threadPolicy);
-            StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().detectActivityLeaks().detectLeakedClosableObjects().penaltyLog().penaltyDropBox().build());
-        }
-
-         */
 
         // load settings (preferences) using separate thread
         new Thread(new Runnable(){
@@ -143,7 +143,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         // Get active twitter session
-        activeSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
+        try {
+            activeSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
+        }catch (Exception e){
+            Toast.makeText(this,e.getMessage(),Toast.LENGTH_SHORT).show();
+        }
 
         if(activeSession != null) {
             followersIdsFileName = activeSession.getUserName() + "_saved_followers_ids";
@@ -167,7 +171,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
 
         }else{
-            startActivity(new Intent(this, WelcomeScreenActivity.class));
+            startActivityWithAnimation(new Intent(this, WelcomeScreenActivity.class));
             finish();
         }
 
@@ -221,7 +225,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         followersCountTv = findViewById(R.id.followers_count_tv);
         followingCountTv = findViewById(R.id.following_count_tv);
         profileImage = findViewById(R.id.main_activity_profile_iv);
-        //progressBar = findViewById(R.id.users_list_progress_bar);
 
         //get buttons
         newFollowersBtn = findViewById(R.id.new_followers_btn);
@@ -296,7 +299,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         userItemsArrayList.add(user);
         intent.putParcelableArrayListExtra(USERS_PARCELABLE_ARRAYLIST,userItemsArrayList);
         intent.putExtra(CURRENT_USER_INDEX,0);
-        startActivity(intent);
+        startActivityWithAnimation(intent);
+        
     }
 
     private void clearLists(){
@@ -697,7 +701,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if(nonFollowersIdsList.size() > 0) {
                         intent = new Intent(MainActivity.this, UsersListActivity.class);
                         intent.putExtra(LIST_NAME, NON_FOLLOWERS);
-                        startActivity(intent);
+                        startActivityWithAnimation(intent);
+                        
                     }else{
                         showEmptyListToast(getString(R.string.nothing_to_view));
                     }
@@ -706,7 +711,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if(mutualFriendsIdsList.size() > 0) {
                         intent = new Intent(MainActivity.this, UsersListActivity.class);
                         intent.putExtra(LIST_NAME, MUTUAL_FOLLOWERS);
-                        startActivity(intent);
+                        startActivityWithAnimation(intent);
+                        
                     }else{
                         showEmptyListToast(getString(R.string.nothing_to_view));
                     }
@@ -715,7 +721,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if(fansIdsList.size() > 0) {
                         intent = new Intent(MainActivity.this, UsersListActivity.class);
                         intent.putExtra(LIST_NAME, FANS);
-                        startActivity(intent);
+                        startActivityWithAnimation(intent);
+                        
                     }else{
                         showEmptyListToast(getString(R.string.nothing_to_view));
                     }
@@ -724,7 +731,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if(newFollowersIdsList.size() > 0) {
                         intent = new Intent(MainActivity.this, UsersListActivity.class);
                         intent.putExtra(LIST_NAME, NEW_FOLLOWERS);
-                        startActivity(intent);
+                        startActivityWithAnimation(intent);
+                        
                     }else{
                         showEmptyListToast(getString(R.string.nothing_to_view));
                     }
@@ -733,7 +741,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if(whitelistedIdsList.size() > 0) {
                         intent = new Intent(MainActivity.this, UsersListActivity.class);
                         intent.putExtra(LIST_NAME, WHITELISTED_USERS);
-                        startActivity(intent);
+                        startActivityWithAnimation(intent);
                     }else{
                         showEmptyListToast(getString(R.string.nothing_to_view));
                     }
@@ -742,7 +750,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     // open users list activity to search for users
                     intent = new Intent(MainActivity.this, UsersListActivity.class);
                     intent.putExtra(LIST_NAME, SEARCH_USERS);
-                    startActivity(intent);
+                    startActivityWithAnimation(intent);
+                    
                     break;
                 case R.id.new_unfollowers_btn:
                     /*
@@ -755,7 +764,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if(newUnfollowersIdsList.size() > 0) {
                         intent = new Intent(MainActivity.this, UsersListActivity.class);
                         intent.putExtra(LIST_NAME, NEW_UNFOLLOWERS);
-                        startActivity(intent);
+                        startActivityWithAnimation(intent);
+                        
                     }else{
                         showEmptyListToast(getString(R.string.nothing_to_view));
                     }
@@ -779,7 +789,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void viewUsers(String followersOrFollowing) {
         Intent intent = new Intent(this, UsersListActivity.class);
         intent.putExtra(LIST_NAME,followersOrFollowing);
-        startActivity(intent);
+        startActivityWithAnimation(intent);
+        
     }
 
 
@@ -818,6 +829,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onClick(View v) {
                 confirmDialog.dismiss();
                 finish();
+                
             }
         });
 
@@ -833,6 +845,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         confirmDialog.show();
 
     }
+
+    private void startActivityWithAnimation(Intent intent){
+        startActivity(intent);
+        overridePendingTransition(android.R.anim.fade_in,android.R.anim.slide_out_right);
+    }
+
+
 
     @Override
     protected void onResume() {
@@ -852,7 +871,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 return true;
             }
             case R.id.action_remove_ads:{
-                startActivity(new Intent(this,RemoveAdsActivity.class));
+                startActivityWithAnimation(new Intent(this,RemoveAdsActivity.class));
+                
                 return true;
             }
             case R.id.action_share_app:{
@@ -874,7 +894,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         shareIntent.setType("text/plain");
         shareIntent.putExtra(Intent.EXTRA_SUBJECT, R.string.app_share_intent_subject);
         shareIntent.putExtra(Intent.EXTRA_TEXT,"https://play.google.com/store/apps/details?id="+getPackageName());
-        startActivity(Intent.createChooser(shareIntent, "Share via"));
+        startActivityWithAnimation(Intent.createChooser(shareIntent, "Share via"));
+        
         drawerLayout.closeDrawer(GravityCompat.START);
     }
 
@@ -886,8 +907,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             TwitterCore.getInstance().getSessionManager().clearActiveSession();
 
             FirebaseAuth.getInstance().signOut();
-            startActivity(new Intent(this, WelcomeScreenActivity.class));
+            startActivityWithAnimation(new Intent(this, WelcomeScreenActivity.class));
+
             finish();
+            
 
         }else{
             Toast.makeText(MainActivity.this,R.string.still_loading,Toast.LENGTH_SHORT).show();
@@ -903,10 +926,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
                 Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
         try {
-            startActivity(goToAppListing);
+            startActivityWithAnimation(goToAppListing);
+            
         } catch (ActivityNotFoundException e) {
-            startActivity(new Intent(Intent.ACTION_VIEW,
-                    Uri.parse("http://play.google.com/store/apps/details?id=" + getPackageName())));
+            startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse("http://play.google.com/store/apps/details?id=" + getPackageName())));
+            
         }
     }
 

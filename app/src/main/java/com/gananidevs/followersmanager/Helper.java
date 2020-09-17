@@ -43,6 +43,7 @@ public class Helper {
     private static final int MIN_KEY_ACTIONS = 4;
     public static final int ONE_DAY_IN_MILLISECONDS = 1000 * 60 * 60 * 24;
     static final int ONE_DAY_IN_SECONDS = 60 * 60 * 24;
+    static final int ONE_MINUTE_IN_MILLISECONDS = 1000 * 60;
 
     static String TECNO_LB7_TEST_ID = "71346B0C1951E4CFD3A0C08DD218BB76";
 
@@ -53,7 +54,7 @@ public class Helper {
     static final String USERS_PARCELABLE_ARRAYLIST = "users parcelable arraylist";
     static final String CURRENT_USER_INDEX = "current user index";
 
-    public static long AD_RELOAD_DELAY = 3000;
+    public static long AD_RELOAD_DELAY = 5000;
 
     static final String DATABASE_URL = "https://followers-manager-for-twitter.firebaseio.com/";
 
@@ -102,6 +103,10 @@ public class Helper {
             ((AppCompatActivity)context).requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},110);
 
         }
+    }
+
+    public static boolean shouldShowInterstitial(){
+        return System.currentTimeMillis() - MainActivity.lastTimeShownInterstitial > ONE_MINUTE_IN_MILLISECONDS;
     }
 
     static boolean proceedWithApiCall(Long interval){
@@ -179,28 +184,6 @@ public class Helper {
         confirmDialog.setContentView(dialogView);
         confirmDialog.show();
 
-        /*
-        new AlertDialog.Builder(context).setMessage("If you are enjoying this app, please take a minute of your time to give us a 5 star rating.")
-            .setPositiveButton("ok", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    MainActivity.remindUserToRateApp = false;
-                    MainActivity.sp.edit().putBoolean(REMIND_USER_TO_RATE_APP,false).apply();
-                    goToAppStore(context);
-
-                }
-            })
-            .setNegativeButton("later",null)
-            .setNeutralButton("Never", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    MainActivity.remindUserToRateApp = false;
-                    MainActivity.sp.edit().putBoolean(REMIND_USER_TO_RATE_APP,false).apply();
-                }
-            })
-            .show();
-
-         */
     }
 
     static void goToAppStore(Context context) {
@@ -432,7 +415,7 @@ public class Helper {
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                pb.setVisibility(View.VISIBLE);
+                if(pb != null) pb.setVisibility(View.VISIBLE);
                 sendTweet(tweetTextTv.getText().toString(),twitterApiClient,ctx,pb);
                 dialog.dismiss();
             }
@@ -450,13 +433,13 @@ public class Helper {
             @Override
             public void success(Result<ResponseBody> result) {
                 Toast.makeText(ctx, "follow back request sent successfully", Toast.LENGTH_SHORT).show();
-                pb.setVisibility(View.GONE);
+                if(pb != null) pb.setVisibility(View.GONE);
                 incrementApiRequestCount(ctx);
             }
 
             @Override
             public void failure(TwitterException exception) {
-                pb.setVisibility(View.GONE);
+                if(pb != null) pb.setVisibility(View.GONE);
                 Toast.makeText(ctx, exception.getMessage(), Toast.LENGTH_SHORT).show();
                 exception.printStackTrace();
             }
