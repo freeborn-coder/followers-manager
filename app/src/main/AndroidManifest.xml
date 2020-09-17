@@ -16,7 +16,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".RemoveAdsActivity" android:configChanges="keyboardHidden|orientation|screenSize"/>
-        <activity android:name=".UserProfileActivity" android:configChanges="keyboardHidden|orientation|screenSize"/>
+        <activity android:name=".UserProfileActivity" android:configChanges="keyboardHidden|orientation|screenSize" />
         <activity
             android:name=".UsersListActivity"
             android:configChanges="keyboardHidden|orientation|screenSize" />

@@ -3,14 +3,9 @@ package com.gananidevs.followersmanager;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 
-import android.Manifest;
-import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -49,8 +44,8 @@ public class WelcomeScreenActivity extends AppCompatActivity {
     private boolean isSignedIn = false;
     ProgressBar progressBar;
 
-    int currentAppVersionCode = 2313101; // Remember to update or increment this whenever you update your app.
-    int latestAppVersionCode;
+    int currentAppVersionCode = 2313104; // Remember to update or increment this whenever you update your app.
+    int newestAppVersionCode;
     private Button loginButton;
 
     @Override
@@ -143,9 +138,9 @@ public class WelcomeScreenActivity extends AppCompatActivity {
     private void initializeTwitter() {
         apiKey = remoteConfig.getString(API_KEY);
         apiSecretKey = remoteConfig.getString(API_SECRET);
-        latestAppVersionCode = (int)remoteConfig.getLong("latest_app_version_code");
+        newestAppVersionCode = (int)remoteConfig.getLong("latest_app_version_code");
 
-        if(latestAppVersionCode > currentAppVersionCode){
+        if(newestAppVersionCode > currentAppVersionCode){
             askUserToUpdateApp();
         }else {
             setUpTwitterAndGoToMainActivity();
@@ -224,7 +219,7 @@ public class WelcomeScreenActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        if(latestAppVersionCode > currentAppVersionCode){
+        if(newestAppVersionCode > currentAppVersionCode){
             askUserToUpdateApp();
         }else if(apiSecretKey != null && apiKey != null){
             if(!apiKey.isEmpty() && !apiSecretKey.isEmpty()){

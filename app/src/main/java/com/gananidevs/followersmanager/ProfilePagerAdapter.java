@@ -59,6 +59,7 @@ import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Random;
@@ -91,7 +92,7 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
     static MyTwitterApiClient twitterApiClient;
     ProgressBar progressBar;
 
-    public ProfilePagerAdapter(FragmentManager fm,ArrayList<UserItem> items,ProgressBar progressBar) {
+    public ProfilePagerAdapter(FragmentManager fm,ArrayList<UserItem> items) {
         super(fm,FragmentStatePagerAdapter.BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
         twitterSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
         twitterApiClient = new MyTwitterApiClient(twitterSession);
@@ -101,7 +102,7 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
 
     @Override
     public Fragment getItem(int position) {
-        return new ProfileFragment(userItems.get(position),progressBar);
+        return new ProfileFragment(userItems.get(position));
     }
 
     @Override
@@ -112,17 +113,25 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
     public static class ProfileFragment extends Fragment{
         UserItem userItem;
         boolean isImageLoaded;
-        private ProgressBar progressBar;
+        private ProgressBar progressBar = UserProfileActivity.progressBar;
         private BottomSheetDialog dialog;
         private ConstraintLayout constraintLayout;
         private ProgressBar btnProgressBar;
         private MaterialButton followUnfollowBtn;
         private UnifiedNativeAdView nativeAdView;
         private AdLoader adLoader;
+        private FrameLayout nativeAdFrameLayout;
 
-        public ProfileFragment(UserItem userItem,ProgressBar progressBar) {
+        public ProfileFragment(UserItem userItem) {
             this.userItem = userItem;
-            this.progressBar = progressBar;
+        }
+
+        public ProfileFragment(){}
+
+        @Override
+        public void onCreate(@Nullable Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            setRetainInstance(true);
         }
 
         @Nullable
@@ -130,6 +139,7 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
         public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
             View view = inflater.inflate(R.layout.pager_layout,container,false);
             nativeAdView = (UnifiedNativeAdView)getLayoutInflater().inflate(R.layout.native_ad_layout,null,false);
+            nativeAdFrameLayout = view.findViewById(R.id.native_ad);
             bindViewToUserItem(view);
             return view;
         }
@@ -137,7 +147,7 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
 
         private void bindViewToUserItem(final View view) {
 
-            dialog = new BottomSheetDialog(getContext());
+            dialog = new BottomSheetDialog(view.getContext());
 
             ImageView popupIcon = view.findViewById(R.id.popup_icon);
             ImageView profileImage = view.findViewById(R.id.profile_image);
@@ -442,9 +452,8 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
 
                             mapNativeAdToLayout(unifiedNativeAd, nativeAdView);
 
-                            FrameLayout nativeAdLayout = view.findViewById(R.id.native_ad);
-                            nativeAdLayout.removeAllViews();
-                            nativeAdLayout.addView(nativeAdView);
+                            nativeAdFrameLayout.removeAllViews();
+                            nativeAdFrameLayout.addView(nativeAdView);
                         }
                     })
                     .withAdListener(new AdListener(){
@@ -574,12 +583,12 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
 
                 if(title.equals(getString(R.string.add_to_whitelist))){
                     // Add tow whitelist
-                    progressBar.setVisibility(View.VISIBLE);
+                    if(progressBar != null) progressBar.setVisibility(View.VISIBLE);
                     addCurrentItemToWhitelist(whitelistStatusTv);
 
                 }else if(title.equals(getString(R.string.remove_from_whitelist))){
                     // Remove current user from whitelist
-                    progressBar.setVisibility(View.VISIBLE);
+                    if(progressBar != null) progressBar.setVisibility(View.VISIBLE);
                     removeCurrentItemFromWhiteList(whitelistStatusTv);
 
                 }else if(title.equals(getString(R.string.view_followers))){
@@ -629,10 +638,10 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
                         whitelistStatusTv.setVisibility(View.GONE);
 
                     }else{
-                        progressBar.setVisibility(View.GONE);
+                        if(progressBar != null) progressBar.setVisibility(View.GONE);
                         Toast.makeText(getContext(),task.getException().getMessage(),Toast.LENGTH_SHORT).show();
                     }
-                    progressBar.setVisibility(View.GONE);
+                    if(progressBar != null) progressBar.setVisibility(View.GONE);
                 }
             });
         }
@@ -659,7 +668,7 @@ public class ProfilePagerAdapter extends FragmentStatePagerAdapter {
                         Toast.makeText(getContext(), Objects.requireNonNull(task.getException()).getMessage(),Toast.LENGTH_SHORT).show();
                     }
 
-                    progressBar.setVisibility(View.GONE);
+                    if(progressBar != null) progressBar.setVisibility(View.GONE);
 
                 }
             });

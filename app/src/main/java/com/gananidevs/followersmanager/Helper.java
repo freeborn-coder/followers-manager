@@ -415,7 +415,7 @@ public class Helper {
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                pb.setVisibility(View.VISIBLE);
+                if(pb != null) pb.setVisibility(View.VISIBLE);
                 sendTweet(tweetTextTv.getText().toString(),twitterApiClient,ctx,pb);
                 dialog.dismiss();
             }
@@ -433,13 +433,13 @@ public class Helper {
             @Override
             public void success(Result<ResponseBody> result) {
                 Toast.makeText(ctx, "follow back request sent successfully", Toast.LENGTH_SHORT).show();
-                pb.setVisibility(View.GONE);
+                if(pb != null) pb.setVisibility(View.GONE);
                 incrementApiRequestCount(ctx);
             }
 
             @Override
             public void failure(TwitterException exception) {
-                pb.setVisibility(View.GONE);
+                if(pb != null) pb.setVisibility(View.GONE);
                 Toast.makeText(ctx, exception.getMessage(), Toast.LENGTH_SHORT).show();
                 exception.printStackTrace();
             }

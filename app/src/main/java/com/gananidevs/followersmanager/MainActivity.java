@@ -111,6 +111,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         MobileAds.initialize(this);
 
+        /*
         if(BuildConfig.DEBUG){
             List<String> testDeviceIds = Arrays.asList(TECNO_LB7_TEST_ID);
             RequestConfiguration configuration = new RequestConfiguration.Builder().setTestDeviceIds(testDeviceIds).build();
@@ -121,22 +122,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             lastTimeShownInterstitial = 0;
         }
 
+         */
 
-//        adRequest = new AdRequest.Builder().build();
-//        lastTimeShownInterstitial = 0;
+        adRequest = new AdRequest.Builder().build();
+        lastTimeShownInterstitial = 0;
 
         setContentView(R.layout.navigation_drawer);
 
         // load shardPrefs manager
         sp = PreferenceManager.getDefaultSharedPreferences(this);
-        /*
-        if(BuildConfig.DEBUG) {
-            StrictMode.ThreadPolicy threadPolicy = new StrictMode.ThreadPolicy.Builder().detectNetwork().detectDiskReads().detectDiskWrites().penaltyLog().penaltyFlashScreen().build();
-            StrictMode.setThreadPolicy(threadPolicy);
-            StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().detectActivityLeaks().detectLeakedClosableObjects().penaltyLog().penaltyDropBox().build());
-        }
-
-         */
 
         // load settings (preferences) using separate thread
         new Thread(new Runnable(){

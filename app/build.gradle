@@ -8,8 +8,8 @@ android {
         applicationId "com.gananidevs.followersmanagerfortwitter"
         minSdkVersion 23
         targetSdkVersion 29
-        versionCode 2313103
-        versionName "1.0.3"
+        versionCode 2313104
+        versionName "1.0.4"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

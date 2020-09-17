@@ -114,7 +114,7 @@ public class UserProfileActivity extends AppCompatActivity {
     private InterstitialAd mInterstitialAd;
     private BottomSheetDialog dialog;
     private MyTwitterApiClient twitterApiClient;
-    public ProgressBar progressBar;
+    public static ProgressBar progressBar;
     private DatabaseReference databaseReference;
     private AdLoader adLoader;
     private AdRequest adRequest;
@@ -145,7 +145,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
             viewPager = findViewById(R.id.view_pager);
             progressBar = findViewById(R.id.progress_bar);
-            profilePagerAdapter = new ProfilePagerAdapter(getSupportFragmentManager(), userItemArrayList, progressBar);
+            profilePagerAdapter = new ProfilePagerAdapter(getSupportFragmentManager(), userItemArrayList);
             viewPager.setAdapter(profilePagerAdapter);
             viewPager.setCurrentItem(currentUserIndex);
             viewPager.setPageMargin(10);
