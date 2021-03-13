@@ -270,7 +270,7 @@ public class UserProfileActivity extends AppCompatActivity {
         if(adFromGoogle.getAdvertiser() == null){
             adView.getAdvertiserView().setVisibility(View.GONE);
         }else{
-            ((TextView)adView.getAdvertiserView()).setText(adFromGoogle.getBody());
+            ((TextView)adView.getAdvertiserView()).setText(adFromGoogle.getAdvertiser());
         }
 
         if(adFromGoogle.getPrice() == null){
